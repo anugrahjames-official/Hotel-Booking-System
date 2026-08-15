@@ -34,7 +34,7 @@ public class ReservationManager {
      * Processes a room booking request for a guest.
      * Performs validations, calculates the total bill (with peak seasonal surcharges 
      * and loyalty discounts), and records the transaction.
-     * 2814330003
+     * 
      * @return true if the booking was processed successfully, false otherwise.
      */
     public static boolean bookRoom(int guestId, int roomNo, String checkInStr, String checkOutStr) {
