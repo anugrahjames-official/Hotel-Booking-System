@@ -1,0 +1,28 @@
+# Compiled Java class files
+bin/
+out/
+*.class
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE / Editor configuration files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# Temporary / Scratch files
+*.tmp
+*.bak
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
