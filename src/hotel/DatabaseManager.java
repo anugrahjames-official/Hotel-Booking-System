@@ -19,6 +19,10 @@ public class DatabaseManager {
 
     // 1. Establish connection to SQLite
     public static Connection connect() throws SQLException {
+        java.io.File dbDir = new java.io.File("database");
+        if (!dbDir.exists()) {
+            dbDir.mkdirs();
+        }
         return DriverManager.getConnection(URL);
     }
 

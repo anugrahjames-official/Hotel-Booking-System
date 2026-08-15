@@ -9,7 +9,8 @@ import java.util.ArrayList;
 
 public class ReservationManager {
     // Use dd-MM-yyyy format for user input
-    private static final DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+    private static final DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("dd-MM-uuuu")
+            .withResolverStyle(java.time.format.ResolverStyle.STRICT);
     // Use yyyy-MM-dd format for database storage
     private static final DateTimeFormatter dbFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
