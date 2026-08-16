@@ -112,9 +112,9 @@ Uncomment and implement these methods (look for `// TODO (Ann)` comments):
   ```sql
   CREATE TABLE IF NOT EXISTS rooms (
       room_no INTEGER PRIMARY KEY,
-      room_type TEXT,
-      base_price REAL,
-      available INTEGER DEFAULT 1
+      room_type TEXT NOT NULL,
+      base_price REAL NOT NULL,
+      available INTEGER DEFAULT 1 NOT NULL
   )
   ```
 
@@ -158,11 +158,11 @@ Uncomment and implement these methods (look for `// TODO (Rishik)` comments):
   ```sql
   CREATE TABLE IF NOT EXISTS guests (
       guest_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT,
-      id_proof TEXT,
-      contact TEXT,
-      loyalty_tier TEXT DEFAULT 'NONE',
-      booking_count INTEGER DEFAULT 0
+      name TEXT NOT NULL,
+      id_proof TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      loyalty_tier TEXT DEFAULT 'NONE' NOT NULL,
+      booking_count INTEGER DEFAULT 0 NOT NULL
   )
   ```
 
@@ -182,7 +182,7 @@ Create the Booking model class with these exact specifications:
 //         String checkOut, double bill
 // Constructor: Booking(int bookingId, int guestId, int roomNo,
 //                      String checkIn, String checkOut, double bill)
-// Override: toString() → "booking 1 | guest id: 1 | room no: 101 | dates: 2026-01-15 to 2026-01-18 | bill: Rs.9405.0"
+// Override: toString() → multiline formatted booking details
 ```
 
 #### 2. `src/hotel/DatabaseManager.java`
@@ -192,11 +192,11 @@ Uncomment and implement these methods (look for `// TODO (Asitha)` comments):
   ```sql
   CREATE TABLE IF NOT EXISTS bookings (
       booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      guest_id INTEGER,
-      room_no INTEGER,
-      check_in TEXT,
-      check_out TEXT,
-      bill REAL,
+      guest_id INTEGER NOT NULL,
+      room_no INTEGER NOT NULL,
+      check_in TEXT NOT NULL,
+      check_out TEXT NOT NULL,
+      bill REAL NOT NULL,
       FOREIGN KEY(guest_id) REFERENCES guests(guest_id),
       FOREIGN KEY(room_no) REFERENCES rooms(room_no)
   )
