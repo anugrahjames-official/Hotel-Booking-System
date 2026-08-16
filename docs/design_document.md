@@ -63,31 +63,31 @@ A console-based Hotel Room Booking System built with Java and SQLite. The system
 | Column      | Type    | Constraints                | Description                        |
 |-------------|---------|----------------------------|------------------------------------|
 | room_no     | INTEGER | PRIMARY KEY                | Unique room number                 |
-| room_type   | TEXT    |                            | e.g., single, double, deluxe       |
-| base_price  | REAL    |                            | Price per night (Rs.)              |
-| available   | INTEGER | DEFAULT 1                  | 1 = available, 0 = booked          |
+| room_type   | TEXT    | NOT NULL                   | e.g., single, double, deluxe       |
+| base_price  | REAL    | NOT NULL                   | Price per night (Rs.)              |
+| available   | INTEGER | DEFAULT 1 NOT NULL         | 1 = available, 0 = booked          |
 
 ### Table: `guests` (Owner: Rishik)
 
 | Column        | Type    | Constraints                  | Description                         |
 |---------------|---------|------------------------------|-------------------------------------|
 | guest_id      | INTEGER | PRIMARY KEY AUTOINCREMENT    | Auto-generated guest ID             |
-| name          | TEXT    |                              | Guest full name                     |
-| id_proof      | TEXT    |                              | Aadhar ID or similar                |
-| contact       | TEXT    |                              | Phone number                        |
-| loyalty_tier  | TEXT    | DEFAULT 'NONE'               | NONE, SILVER, or GOLD               |
-| booking_count | INTEGER | DEFAULT 0                    | Total bookings made                 |
+| name          | TEXT    | NOT NULL                     | Guest full name                     |
+| id_proof      | TEXT    | NOT NULL                     | Aadhar ID or similar                |
+| contact       | TEXT    | NOT NULL                     | Phone number                        |
+| loyalty_tier  | TEXT    | DEFAULT 'NONE' NOT NULL      | NONE, SILVER, or GOLD               |
+| booking_count | INTEGER | DEFAULT 0 NOT NULL           | Total bookings made                 |
 
 ### Table: `bookings` (Owner: Asitha)
 
 | Column     | Type    | Constraints                              | Description                  |
 |------------|---------|------------------------------------------|------------------------------|
 | booking_id | INTEGER | PRIMARY KEY AUTOINCREMENT                | Auto-generated booking ID    |
-| guest_id   | INTEGER | FOREIGN KEY → guests(guest_id)           | Reference to the guest       |
-| room_no    | INTEGER | FOREIGN KEY → rooms(room_no)             | Reference to the room        |
-| check_in   | TEXT    |                                          | Check-in date (yyyy-MM-dd)   |
-| check_out  | TEXT    |                                          | Check-out date (yyyy-MM-dd)  |
-| bill       | REAL    |                                          | Final calculated bill (Rs.)  |
+| guest_id   | INTEGER | NOT NULL, FOREIGN KEY → guests(guest_id) | Reference to the guest       |
+| room_no    | INTEGER | NOT NULL, FOREIGN KEY → rooms(room_no)   | Reference to the room        |
+| check_in   | TEXT    | NOT NULL                                 | Check-in date (yyyy-MM-dd)   |
+| check_out  | TEXT    | NOT NULL                                 | Check-out date (yyyy-MM-dd)  |
+| bill       | REAL    | NOT NULL                                 | Final calculated bill (Rs.)  |
 
 ---
 
