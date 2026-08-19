@@ -31,12 +31,23 @@ public class DatabaseManager {
     public static void initializeDatabase() {
         // TODO (Ann): Add CREATE TABLE rooms
         // TODO (Rishik): Add CREATE TABLE guests
-        // TODO (Asitha): Add CREATE TABLE bookings
+        String createBookings = """
+    CREATE TABLE IF NOT EXISTS bookings (
+        booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guest_id INTEGER NOT NULL,
+        room_no INTEGER NOT NULL,
+        check_in TEXT NOT NULL,
+        check_out TEXT NOT NULL,
+        bill REAL NOT NULL,
+        FOREIGN KEY (guest_id) REFERENCES guests(guest_id),
+        FOREIGN KEY (room_no) REFERENCES rooms(room_no)
+    )
+    """;
 
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             // TODO (Ann): stmt.execute(createRooms);
             // TODO (Rishik): stmt.execute(createGuests);
-            // TODO (Asitha): stmt.execute(createBookings);
+             stmt.execute(createBookings);
         } catch (SQLException e) {
             System.out.println("db initialization error: " + e.getMessage());
         }
