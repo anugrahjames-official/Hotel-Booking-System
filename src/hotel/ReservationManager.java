@@ -98,6 +98,7 @@ public class ReservationManager {
         }
     }
 
-    // TODO (Asitha): Cancels a booking and frees up the room.
-    // public static void cancelBooking(int bookingId) { ... }
+    public static void cancelBooking(int bookingId) {
+    DatabaseManager.cancelBooking(bookingId);
+}
 }
