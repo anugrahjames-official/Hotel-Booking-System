@@ -77,7 +77,7 @@ public class DatabaseManager {
     // TODO (Rishik): Fetch specific guest to check their tier
     // public static Guest getGuest(int guestId) { ... }
 
-    public static boolean bookRoom(int guestId, int roomNo, String checkIn,
+    public static void bookRoom(int guestId, int roomNo, String checkIn,
                                String checkOut, double bill) {
 
     String insertBooking = """
@@ -144,7 +144,7 @@ public class DatabaseManager {
             System.out.println("Room booked successfully!");
             System.out.println("Bill: Rs." + bill);
 
-            return true;
+            
 
         } catch (SQLException e) {
 
@@ -163,7 +163,7 @@ public class DatabaseManager {
                         + rollbackError.getMessage());
             }
 
-            return false;
+           
 
         } finally {
 
@@ -176,7 +176,7 @@ public class DatabaseManager {
         System.out.println("Database connection error: "
                 + e.getMessage());
 
-        return false;
+       
     }
 }
 
