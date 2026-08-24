@@ -31,12 +31,23 @@ public class DatabaseManager {
     public static void initializeDatabase() {
         // TODO (Ann): Add CREATE TABLE rooms
         // TODO (Rishik): Add CREATE TABLE guests
-        // TODO (Asitha): Add CREATE TABLE bookings
+        String createBookings = """
+    CREATE TABLE IF NOT EXISTS bookings (
+        booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        guest_id INTEGER NOT NULL,
+        room_no INTEGER NOT NULL,
+        check_in TEXT NOT NULL,
+        check_out TEXT NOT NULL,
+        bill REAL NOT NULL,
+        FOREIGN KEY (guest_id) REFERENCES guests(guest_id),
+        FOREIGN KEY (room_no) REFERENCES rooms(room_no)
+    )
+    """;
 
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             // TODO (Ann): stmt.execute(createRooms);
             // TODO (Rishik): stmt.execute(createGuests);
-            // TODO (Asitha): stmt.execute(createBookings);
+             stmt.execute(createBookings);
         } catch (SQLException e) {
             System.out.println("db initialization error: " + e.getMessage());
         }
@@ -66,9 +77,108 @@ public class DatabaseManager {
     // TODO (Rishik): Fetch specific guest to check their tier
     // public static Guest getGuest(int guestId) { ... }
 
-    // TODO (Asitha): 6. Book a room
-    // public static void bookRoom(int guestId, int roomNo, String checkIn, String checkOut, double bill) { ... }
-    // NOTE: Call updateLoyaltyTier(conn, guestId) after the booking transaction commits.
+    public static boolean bookRoom(int guestId, int roomNo, String checkIn,
+                               String checkOut, double bill) {
+
+    String insertBooking = """
+        INSERT INTO bookings
+        (guest_id, room_no, check_in, check_out, bill)
+        VALUES (?, ?, ?, ?, ?)
+        """;
+
+    String updateRoom =
+            "UPDATE rooms SET available = 0 WHERE room_no = ?";
+
+    String incrementBookingCount =
+            "UPDATE guests SET booking_count = booking_count + 1 " +
+            "WHERE guest_id = ?";
+
+    try (Connection conn = connect()) {
+
+        // Start transaction
+        conn.setAutoCommit(false);
+
+        try (PreparedStatement bookingStmt =
+                     conn.prepareStatement(insertBooking);
+             PreparedStatement roomStmt =
+                     conn.prepareStatement(updateRoom);
+             PreparedStatement countStmt =
+                     conn.prepareStatement(incrementBookingCount)) {
+
+            // 1. Insert booking
+            bookingStmt.setInt(1, guestId);
+            bookingStmt.setInt(2, roomNo);
+            bookingStmt.setString(3, checkIn);
+            bookingStmt.setString(4, checkOut);
+            bookingStmt.setDouble(5, bill);
+
+            if (bookingStmt.executeUpdate() == 0) {
+                throw new SQLException("Booking insertion failed.");
+            }
+
+            // 2. Make room unavailable
+            roomStmt.setInt(1, roomNo);
+
+            if (roomStmt.executeUpdate() == 0) {
+                throw new SQLException("Room update failed.");
+            }
+
+            // 3. Increase guest booking count
+            countStmt.setInt(1, guestId);
+
+            if (countStmt.executeUpdate() == 0) {
+                throw new SQLException(
+                        "Guest booking count update failed.");
+            }
+
+            // 4. FIRST COMMIT
+            conn.commit();
+
+            // 5. Update loyalty tier
+            updateLoyaltyTier(conn, guestId);
+
+            // 6. SECOND COMMIT
+            conn.commit();
+
+            // 7. Success message
+            System.out.println("Room booked successfully!");
+            System.out.println("Bill: Rs." + bill);
+
+            return true;
+
+        } catch (SQLException e) {
+
+            System.out.println("Booking failed.");
+            System.out.println("Error: " + e.getMessage());
+
+            // Rollback in separate try-catch
+            try {
+                conn.rollback();
+                System.out.println("Rollback done.");
+
+            } catch (SQLException rollbackError) {
+
+                System.out.println("Rollback failed.");
+                System.out.println("Rollback error: "
+                        + rollbackError.getMessage());
+            }
+
+            return false;
+
+        } finally {
+
+            // Restore auto-commit
+            conn.setAutoCommit(true);
+        }
+
+    } catch (SQLException e) {
+
+        System.out.println("Database connection error: "
+                + e.getMessage());
+
+        return false;
+    }
+}
 
     // Internal method to update loyalty tier
     private static void updateLoyaltyTier(Connection conn, int guestId) throws SQLException {
@@ -93,9 +203,129 @@ public class DatabaseManager {
         }
     }
 
-    // TODO (Asitha): 7. View all bookings
-    // public static ArrayList<Booking> getAllBookings() { ... }
+    public static ArrayList<Booking> getAllBookings() {
 
-    // TODO (Asitha): 8. Cancel a booking
-    // public static void cancelBooking(int bookingId) { ... }
+    ArrayList<Booking> bookings = new ArrayList<>();
+
+    String sql = "SELECT * FROM bookings";
+
+    try (Connection conn = connect();
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+
+        while (rs.next()) {
+
+            Booking booking = new Booking(
+                rs.getInt("booking_id"),
+                rs.getInt("guest_id"),
+                rs.getInt("room_no"),
+                rs.getString("check_in"),
+                rs.getString("check_out"),
+                rs.getDouble("bill")
+            );
+
+            bookings.add(booking);
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Error fetching bookings: " + e.getMessage());
+    }
+
+    return bookings;
+    }
+    public static void cancelBooking(int bookingId) {
+
+    String selectRoom =
+            "SELECT room_no FROM bookings WHERE booking_id = ?";
+
+    String deleteBooking =
+            "DELETE FROM bookings WHERE booking_id = ?";
+
+    String updateRoom =
+            "UPDATE rooms SET available = 1 WHERE room_no = ?";
+
+    try (Connection conn = connect();
+         PreparedStatement selectStmt = conn.prepareStatement(selectRoom)) {
+
+        // 1. SELECT first
+        selectStmt.setInt(1, bookingId);
+
+        int roomNo;
+
+        try (ResultSet rs = selectStmt.executeQuery()) {
+
+            // If booking does not exist, stop here
+            if (!rs.next()) {
+                System.out.println("Booking not found.");
+                return;
+            }
+
+            roomNo = rs.getInt("room_no");
+        }
+
+        // 2. Booking exists, so start transaction
+        conn.setAutoCommit(false);
+
+        try {
+
+            // 3. Delete booking
+            try (PreparedStatement deleteStmt =
+                         conn.prepareStatement(deleteBooking)) {
+
+                deleteStmt.setInt(1, bookingId);
+
+                int deletedRows = deleteStmt.executeUpdate();
+
+                if (deletedRows == 0) {
+                    throw new SQLException("Booking deletion failed.");
+                }
+            }
+
+            // 4. Make room available
+            try (PreparedStatement updateStmt =
+                         conn.prepareStatement(updateRoom)) {
+
+                updateStmt.setInt(1, roomNo);
+
+                int updatedRows = updateStmt.executeUpdate();
+
+                if (updatedRows == 0) {
+                    throw new SQLException(
+                            "Room update failed. Room number: " + roomNo
+                    );
+                }
+            }
+
+            // 5. Both operations successful
+            conn.commit();
+
+            System.out.println("Booking cancelled successfully!");
+
+        } catch (SQLException e) {
+
+            // 6. Something failed → rollback
+            try {
+                conn.rollback();
+                System.out.println("Booking cancellation failed.");
+                System.out.println("Error: " + e.getMessage());
+                System.out.println("Rollback done.");
+
+            } catch (SQLException rollbackError) {
+                System.out.println("Rollback failed.");
+                System.out.println("Rollback error: "
+                        + rollbackError.getMessage());
+            }
+
+        } finally {
+
+            // 7. Restore auto-commit
+            conn.setAutoCommit(true);
+        }
+
+    } catch (SQLException e) {
+
+        // Database connection / SELECT error
+        System.out.println("Database error.");
+        System.out.println("Error: " + e.getMessage());
+    }
 }
