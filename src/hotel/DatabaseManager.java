@@ -77,7 +77,7 @@ public class DatabaseManager {
     // TODO (Rishik): Fetch specific guest to check their tier
     // public static Guest getGuest(int guestId) { ... }
 
-    public static boolean bookRoom(int guestId, int roomNo, String checkIn,
+    public static void bookRoom(int guestId, int roomNo, String checkIn,
                                String checkOut, double bill) {
 
     String insertBooking = """
