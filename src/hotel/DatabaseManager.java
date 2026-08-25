@@ -78,7 +78,7 @@ public class DatabaseManager {
     // public static Guest getGuest(int guestId) { ... }
 
     public static void bookRoom(int guestId, int roomNo, String checkIn,
-                               String checkOut, double bill) {
+                                String checkOut, double bill) {
 
     String insertBooking = """
         INSERT INTO bookings
@@ -144,8 +144,6 @@ public class DatabaseManager {
             System.out.println("Room booked successfully!");
             System.out.println("Bill: Rs." + bill);
 
-            
-
         } catch (SQLException e) {
 
             System.out.println("Booking failed.");
@@ -163,8 +161,6 @@ public class DatabaseManager {
                         + rollbackError.getMessage());
             }
 
-           
-
         } finally {
 
             // Restore auto-commit
@@ -175,8 +171,6 @@ public class DatabaseManager {
 
         System.out.println("Database connection error: "
                 + e.getMessage());
-
-       
     }
 }
 
