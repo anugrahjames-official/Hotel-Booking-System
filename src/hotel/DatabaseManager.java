@@ -30,7 +30,15 @@ public class DatabaseManager {
     // TODO (All): Each member adds their table creation here
     public static void initializeDatabase() {
         // TODO (Ann): Add CREATE TABLE rooms
-        // TODO (Rishik): Add CREATE TABLE guests
+        String createGuestsTable =
+        "CREATE TABLE IF NOT EXISTS guests (" +
+        "guest_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+        "name TEXT NOT NULL, " +
+        "id_proof TEXT NOT NULL, " +
+        "contact TEXT NOT NULL, " +
+        "loyalty_tier TEXT DEFAULT 'NONE' NOT NULL, " +
+        "booking_count INTEGER DEFAULT 0 NOT NULL" +
+        ")";
         String createBookings = """
     CREATE TABLE IF NOT EXISTS bookings (
         booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,7 +54,7 @@ public class DatabaseManager {
 
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             // TODO (Ann): stmt.execute(createRooms);
-            // TODO (Rishik): stmt.execute(createGuests);
+            stmt.execute(createGuestsTable);
              stmt.execute(createBookings);
         } catch (SQLException e) {
             System.out.println("db initialization error: " + e.getMessage());
@@ -68,14 +76,97 @@ public class DatabaseManager {
     // TODO (Ann): Update room type and price
     // public static void updateRoom(int roomNo, String roomType, double basePrice) { ... }
 
-    // TODO (Rishik): 4. Register a new guest
-    // public static void addGuest(String name, String idProof, String contact) { ... }
+    public static void addGuest(String name, String idProof, String contact) {
 
-    // TODO (Rishik): 5. Fetch all guests
-    // public static ArrayList<Guest> getAllGuests() { ... }
+    String sql = "INSERT INTO guests (name, id_proof, contact) "
+               + "VALUES (?, ?, ?)";
 
-    // TODO (Rishik): Fetch specific guest to check their tier
-    // public static Guest getGuest(int guestId) { ... }
+    try (Connection conn = connect();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        pstmt.setString(1, name);
+        pstmt.setString(2, idProof);
+        pstmt.setString(3, contact);
+
+        int rows = pstmt.executeUpdate();
+
+        if (rows > 0) {
+            System.out.println("Guest registered successfully.");
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Error adding guest: " + e.getMessage());
+    }
+}
+
+   public static ArrayList<Guest> getAllGuests() {
+
+    ArrayList<Guest> guests = new ArrayList<>();
+
+    String sql = "SELECT guest_id, name, id_proof, contact, "
+               + "loyalty_tier, booking_count "
+               + "FROM guests ORDER BY guest_id";
+
+    try (Connection conn = connect();
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+
+        while (rs.next()) {
+
+            Guest guest = new Guest(
+                    rs.getInt("guest_id"),
+                    rs.getString("name"),
+                    rs.getString("id_proof"),
+                    rs.getString("contact"),
+                    rs.getString("loyalty_tier"),
+                    rs.getInt("booking_count")
+            );
+
+            guests.add(guest);
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Error getting guests: "
+                + e.getMessage());
+    }
+
+    return guests;
+}
+
+
+    public static Guest getGuest(int guestId) {
+
+    String sql = "SELECT guest_id, name, id_proof, contact, "
+               + "loyalty_tier, booking_count "
+               + "FROM guests WHERE guest_id = ?";
+
+    try (Connection conn = connect();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        pstmt.setInt(1, guestId);
+
+        try (ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+
+                return new Guest(
+                        rs.getInt("guest_id"),
+                        rs.getString("name"),
+                        rs.getString("id_proof"),
+                        rs.getString("contact"),
+                        rs.getString("loyalty_tier"),
+                        rs.getInt("booking_count")
+                );
+            }
+        }
+
+    } catch (SQLException e) {
+        System.out.println("Error getting guest: "
+                + e.getMessage());
+    }
+
+    return null;
+}
 
     public static void bookRoom(int guestId, int roomNo, String checkIn,
                                String checkOut, double bill) {
