@@ -29,7 +29,14 @@ public class DatabaseManager {
     // 2. Initialize tables
     // TODO (All): Each member adds their table creation here
     public static void initializeDatabase() {
-        // TODO (Ann): Add CREATE TABLE rooms
+         String createRooms = """
+            CREATE TABLE IF NOT EXISTS rooms (
+                room_no INTEGER PRIMARY KEY,
+                room_type TEXT NOT NULL,
+                base_price REAL NOT NULL,
+                available INTEGER NOT NULL
+            )
+            """;
         // TODO (Rishik): Add CREATE TABLE guests
         String createBookings = """
     CREATE TABLE IF NOT EXISTS bookings (
@@ -45,28 +52,201 @@ public class DatabaseManager {
     """;
 
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
-            // TODO (Ann): stmt.execute(createRooms);
+            stmt.execute(createRooms);
             // TODO (Rishik): stmt.execute(createGuests);
              stmt.execute(createBookings);
         } catch (SQLException e) {
             System.out.println("db initialization error: " + e.getMessage());
         }
     }
+     
+       // 3. Fetch all available rooms
+     public static ArrayList<Room> getAvailableRooms() {
 
-    // TODO (Ann): 3. Fetch all available rooms
-    // public static ArrayList<Room> getAvailableRooms() { ... }
+        ArrayList<Room> rooms = new ArrayList<>();
 
-    // TODO (Ann): Fetch a specific room to get its price
-    // public static Room getRoom(int roomNo) { ... }
+        String sql = """
+            SELECT room_no, room_type, base_price, available
+            FROM rooms
+            WHERE available = 1
+            """;
 
-    // TODO (Ann): Add a new room
-    // public static void addRoom(int roomNo, String roomType, double basePrice) { ... }
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
 
-    // TODO (Ann): Remove a room (only if not booked)
-    // public static void removeRoom(int roomNo) { ... }
+            while (rs.next()) {
 
-    // TODO (Ann): Update room type and price
-    // public static void updateRoom(int roomNo, String roomType, double basePrice) { ... }
+                Room room = new Room(
+                    rs.getInt("room_no"),
+                    rs.getString("room_type"),
+                    rs.getDouble("base_price")
+                );
+
+                room.setAvailable(rs.getInt("available") == 1);
+
+                rooms.add(room);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("error fetching available rooms: "
+                    + e.getMessage());
+        }
+
+        return rooms;
+    }
+
+      // Fetch a specific room to get its price
+    public static Room getRoom(int roomNo) {
+
+        String sql = """
+            SELECT room_no, room_type, base_price, available
+            FROM rooms
+            WHERE room_no = ?
+            """;
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, roomNo);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                if (rs.next()) {
+
+                    Room room = new Room(
+                        rs.getInt("room_no"),
+                        rs.getString("room_type"),
+                        rs.getDouble("base_price")
+                    );
+
+                    room.setAvailable(rs.getInt("available") == 1);
+
+                    return room;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("error fetching room: "
+                    + e.getMessage());
+        }
+
+        return null;
+    }
+
+    // Add a new room
+    public static void addRoom(
+            int roomNo,
+            String roomType,
+            double basePrice) {
+
+        String sql = """
+            INSERT INTO rooms
+            (room_no, room_type, base_price, available)
+            VALUES (?, ?, ?, ?)
+            """;
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, roomNo);
+            pstmt.setString(2, roomType);
+            pstmt.setDouble(3, basePrice);
+            pstmt.setInt(4, 1);
+
+            pstmt.executeUpdate();
+
+            System.out.println("Room added successfully.");
+
+        } catch (SQLException e) {
+            System.out.println("error adding room: "
+                    + e.getMessage());
+        }
+    }
+
+    // Remove a room (only if not booked)
+    public static void removeRoom(int roomNo) {
+
+        // Check whether room has any booking
+        String checkBooking = """
+            SELECT COUNT(*)
+            FROM bookings
+            WHERE room_no = ?
+            """;
+
+        String deleteRoom = """
+            DELETE FROM rooms
+            WHERE room_no = ?
+            """;
+
+        try (Connection conn = connect();
+             PreparedStatement checkStmt =
+                     conn.prepareStatement(checkBooking)) {
+
+            checkStmt.setInt(1, roomNo);
+
+            try (ResultSet rs = checkStmt.executeQuery()) {
+
+                if (rs.next() && rs.getInt(1) > 0) {
+                    System.out.println(
+                        "Room cannot be removed because it is booked."
+                    );
+                    return;
+                }
+            }
+
+            try (PreparedStatement deleteStmt =
+                         conn.prepareStatement(deleteRoom)) {
+
+                deleteStmt.setInt(1, roomNo);
+
+                int rows = deleteStmt.executeUpdate();
+
+                if (rows > 0) {
+                    System.out.println("Room removed successfully.");
+                } else {
+                    System.out.println("Room not found.");
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("error removing room: "
+                    + e.getMessage());
+        }
+    }
+
+    // Update room type and price
+    public static void updateRoom(
+            int roomNo,
+            String roomType,
+            double basePrice) {
+
+        String sql = """
+            UPDATE rooms
+            SET room_type = ?, base_price = ?
+            WHERE room_no = ?
+            """;
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, roomType);
+            pstmt.setDouble(2, basePrice);
+            pstmt.setInt(3, roomNo);
+
+            int rows = pstmt.executeUpdate();
+
+            if (rows > 0) {
+                System.out.println("Room updated successfully.");
+            } else {
+                System.out.println("Room not found.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("error updating room: "
+                    + e.getMessage());
+        }
+    }
 
     // TODO (Rishik): 4. Register a new guest
     // public static void addGuest(String name, String idProof, String contact) { ... }
