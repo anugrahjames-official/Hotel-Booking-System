@@ -49,14 +49,16 @@ public class ReservationManager {
 
         ArrayList<Room> rooms =
                 DatabaseManager.getAvailableRooms();
+        String normalizedTypeFilter =
+            typeFilter == null ? null : typeFilter.trim();
 
         boolean found = false;
 
         for (Room room : rooms) {
 
-            if (typeFilter == null ||
-                    typeFilter.trim().isEmpty() ||
-                    room.getRoomType().equalsIgnoreCase(typeFilter)) {
+                if (normalizedTypeFilter == null ||
+                    normalizedTypeFilter.isEmpty() ||
+                    room.getRoomType().equalsIgnoreCase(normalizedTypeFilter)) {
 
                 System.out.println(room);
                 System.out.println("--------------------");

@@ -34,7 +34,7 @@ public class DatabaseManager {
                 room_no INTEGER PRIMARY KEY,
                 room_type TEXT NOT NULL,
                 base_price REAL NOT NULL,
-                available INTEGER NOT NULL
+                available INTEGER DEFAULT 1 NOT NULL
             )
             """;
         // TODO (Rishik): Add CREATE TABLE guests
@@ -136,6 +136,18 @@ public class DatabaseManager {
             String roomType,
             double basePrice) {
 
+        if (!isValidRoomType(roomType)) {
+            System.out.println("Room type cannot be empty.");
+            return;
+        }
+
+        if (!isValidBasePrice(basePrice)) {
+            System.out.println("Base price cannot be negative.");
+            return;
+        }
+
+        roomType = roomType.trim();
+
         String sql = """
             INSERT INTO rooms
             (room_no, room_type, base_price, available)
@@ -160,12 +172,16 @@ public class DatabaseManager {
         }
     }
 
-    // Remove a room only when it is currently available
+    // Remove a room only when it is available and has no booking history
     public static void removeRoom(int roomNo) {
 
         String deleteRoom = """
             DELETE FROM rooms
-            WHERE room_no = ? AND available = 1
+            WHERE room_no = ?
+              AND available = 1
+              AND NOT EXISTS (
+                  SELECT 1 FROM bookings WHERE bookings.room_no = rooms.room_no
+              )
             """;
 
            try (Connection conn = connect();
@@ -180,7 +196,7 @@ public class DatabaseManager {
                     System.out.println("Room removed successfully.");
                 } else {
                     System.out.println(
-                        "Room not found or currently booked."
+                        "Room not found, currently booked, or has booking history."
                     );
                 }
 
@@ -195,6 +211,18 @@ public class DatabaseManager {
             int roomNo,
             String roomType,
             double basePrice) {
+
+        if (!isValidRoomType(roomType)) {
+            System.out.println("Room type cannot be empty.");
+            return;
+        }
+
+        if (!isValidBasePrice(basePrice)) {
+            System.out.println("Base price cannot be negative.");
+            return;
+        }
+
+        roomType = roomType.trim();
 
         String sql = """
             UPDATE rooms
@@ -221,6 +249,14 @@ public class DatabaseManager {
             System.out.println("error updating room: "
                     + e.getMessage());
         }
+    }
+
+    private static boolean isValidRoomType(String roomType) {
+        return roomType != null && !roomType.trim().isEmpty();
+    }
+
+    private static boolean isValidBasePrice(double basePrice) {
+        return basePrice >= 0;
     }
 
     // TODO (Rishik): 4. Register a new guest
