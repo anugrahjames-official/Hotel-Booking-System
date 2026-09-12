@@ -27,7 +27,6 @@ public class DatabaseManager {
     }
 
     // 2. Initialize tables
-    // TODO (All): Each member adds their table creation here
     public static void initializeDatabase() {
         String createRooms = """
             CREATE TABLE IF NOT EXISTS rooms (
@@ -269,30 +268,60 @@ public class DatabaseManager {
         return basePrice >= 0;
     }
 
-    public static void addGuest(String name, String idProof, String contact) {
+    private static boolean isValidGuestContact(String contact) {
+        return contact != null && contact.trim().matches("\\d{10}");
+    }
 
-    String sql = "INSERT INTO guests (name, id_proof, contact) "
-               + "VALUES (?, ?, ?)";
-
-    try (Connection conn = connect();
-         PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-        pstmt.setString(1, name);
-        pstmt.setString(2, idProof);
-        pstmt.setString(3, contact);
-
-        int rows = pstmt.executeUpdate();
-
-        if (rows > 0) {
-            System.out.println("Guest registered successfully.");
+    public static boolean addGuest(String name, String idProof, String contact) {
+        if (name == null || name.trim().isEmpty()) {
+            System.out.println("Error: Guest name cannot be empty");
+            return false;
         }
 
-    } catch (SQLException e) {
-        System.out.println("Error adding guest: " + e.getMessage());
-    }
-}
+        if (idProof == null || idProof.trim().isEmpty()) {
+            System.out.println("Error: Guest ID proof cannot be empty");
+            return false;
+        }
 
-   public static ArrayList<Guest> getAllGuests() {
+        if (contact == null || contact.trim().isEmpty()) {
+            System.out.println("Error: Guest contact cannot be empty");
+            return false;
+        }
+
+        if (!isValidGuestContact(contact)) {
+            System.out.println("Error: Guest contact must be a valid 10-digit number");
+            return false;
+        }
+
+        String trimmedName = name.trim();
+        String trimmedIdProof = idProof.trim();
+        String trimmedContact = contact.trim();
+
+        String sql = "INSERT INTO guests (name, id_proof, contact) "
+                   + "VALUES (?, ?, ?)";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, trimmedName);
+            pstmt.setString(2, trimmedIdProof);
+            pstmt.setString(3, trimmedContact);
+
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Guest registered successfully.");
+                return true;
+            }
+
+            return false;
+
+        } catch (SQLException e) {
+            System.out.println("Error adding guest: " + e.getMessage());
+            return false;
+        }
+    }
+
+   public static ArrayList<Guest> getAllGuests() throws SQLException {
 
     ArrayList<Guest> guests = new ArrayList<>();
 
@@ -318,16 +347,13 @@ public class DatabaseManager {
             guests.add(guest);
         }
 
-    } catch (SQLException e) {
-        System.out.println("Error getting guests: "
-                + e.getMessage());
     }
 
     return guests;
 }
 
 
-    public static Guest getGuest(int guestId) {
+    public static Guest getGuest(int guestId) throws SQLException {
 
     String sql = "SELECT guest_id, name, id_proof, contact, "
                + "loyalty_tier, booking_count "
@@ -352,10 +378,6 @@ public class DatabaseManager {
                 );
             }
         }
-
-    } catch (SQLException e) {
-        System.out.println("Error getting guest: "
-                + e.getMessage());
     }
 
     return null;
