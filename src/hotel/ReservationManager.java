@@ -58,7 +58,7 @@ public class ReservationManager {
                     typeFilter.trim().isEmpty() ||
                     room.getRoomType().equalsIgnoreCase(typeFilter)) {
 
-                room.displayRoomDetails();
+                System.out.println(room);
                 System.out.println("--------------------");
                 found = true;
             }

@@ -2,22 +2,22 @@ package hotel.model;
 
 public class Room {
 
-    private int roomNumber;
-    private String roomType;
-    private double basePrice;
-    private boolean available;
+    private final int roomNo;
+    private final String roomType;
+    private final double basePrice;
+    private final boolean available;
 
     // Constructor
-    public Room(int roomNumber, String roomType, double basePrice) {
-        this.roomNumber = roomNumber;
+    public Room(int roomNo, String roomType, double basePrice, boolean available) {
+        this.roomNo= roomNo;
         this.roomType = roomType;
         this.basePrice = basePrice;
-        this.available = true;
+        this.available = available;
     }
 
     // Getters
-    public int getRoomNumber() {
-        return roomNumber;
+    public int getRoomNo() {
+        return roomNo;
     }
 
     public String getRoomType() {
@@ -32,24 +32,14 @@ public class Room {
         return available;
     }
 
-    // Setters
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
+    @Override
+    public String toString() {
+        return String.format(
+                "Room Details:%nRoom Number: %d%nRoom Type: %s%nBase Price: %.2f%nAvailable: %s",
+                roomNo,
+                roomType,
+                basePrice,
+                available ? "Yes" : "No");
     }
 
-    public void setBasePrice(double basePrice) {
-        this.basePrice = basePrice;
-    }
-
-    public void setAvailable(boolean available) {
-        this.available = available;
-    }
-
-    // Display room details
-    public void displayRoomDetails() {
-        System.out.println("Room Number: " + roomNumber);
-        System.out.println("Room Type: " + roomType);
-        System.out.println("Base Price: " + basePrice);
-        System.out.println("Available: " + (available ? "Yes" : "No"));
-    }
 }

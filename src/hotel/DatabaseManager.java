@@ -80,14 +80,12 @@ public class DatabaseManager {
                 Room room = new Room(
                     rs.getInt("room_no"),
                     rs.getString("room_type"),
-                    rs.getDouble("base_price")
+                    rs.getDouble("base_price"),
+                    rs.getInt("available") == 1
                 );
-
-                room.setAvailable(rs.getInt("available") == 1);
 
                 rooms.add(room);
             }
-
         } catch (SQLException e) {
             System.out.println("error fetching available rooms: "
                     + e.getMessage());
@@ -117,15 +115,13 @@ public class DatabaseManager {
                     Room room = new Room(
                         rs.getInt("room_no"),
                         rs.getString("room_type"),
-                        rs.getDouble("base_price")
+                        rs.getDouble("base_price"),
+                        rs.getInt("available") == 1
                     );
-
-                    room.setAvailable(rs.getInt("available") == 1);
 
                     return room;
                 }
             }
-
         } catch (SQLException e) {
             System.out.println("error fetching room: "
                     + e.getMessage());
@@ -164,38 +160,16 @@ public class DatabaseManager {
         }
     }
 
-    // Remove a room (only if not booked)
+    // Remove a room only when it is currently available
     public static void removeRoom(int roomNo) {
-
-        // Check whether room has any booking
-        String checkBooking = """
-            SELECT COUNT(*)
-            FROM bookings
-            WHERE room_no = ?
-            """;
 
         String deleteRoom = """
             DELETE FROM rooms
-            WHERE room_no = ?
+            WHERE room_no = ? AND available = 1
             """;
 
-        try (Connection conn = connect();
-             PreparedStatement checkStmt =
-                     conn.prepareStatement(checkBooking)) {
-
-            checkStmt.setInt(1, roomNo);
-
-            try (ResultSet rs = checkStmt.executeQuery()) {
-
-                if (rs.next() && rs.getInt(1) > 0) {
-                    System.out.println(
-                        "Room cannot be removed because it is booked."
-                    );
-                    return;
-                }
-            }
-
-            try (PreparedStatement deleteStmt =
+           try (Connection conn = connect();
+               PreparedStatement deleteStmt =
                          conn.prepareStatement(deleteRoom)) {
 
                 deleteStmt.setInt(1, roomNo);
@@ -205,9 +179,10 @@ public class DatabaseManager {
                 if (rows > 0) {
                     System.out.println("Room removed successfully.");
                 } else {
-                    System.out.println("Room not found.");
+                    System.out.println(
+                        "Room not found or currently booked."
+                    );
                 }
-            }
 
         } catch (SQLException e) {
             System.out.println("error removing room: "
@@ -508,4 +483,5 @@ public class DatabaseManager {
         System.out.println("Database error.");
         System.out.println("Error: " + e.getMessage());
     }
+}
 }
