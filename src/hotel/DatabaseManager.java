@@ -27,9 +27,8 @@ public class DatabaseManager {
     }
 
     // 2. Initialize tables
-    // TODO (All): Each member adds their table creation here
     public static void initializeDatabase() {
-         String createRooms = """
+        String createRooms = """
             CREATE TABLE IF NOT EXISTS rooms (
                 room_no INTEGER PRIMARY KEY,
                 room_type TEXT NOT NULL,
@@ -37,24 +36,34 @@ public class DatabaseManager {
                 available INTEGER DEFAULT 1 NOT NULL
             )
             """;
-        // TODO (Rishik): Add CREATE TABLE guests
+
+        String createGuestsTable =
+            "CREATE TABLE IF NOT EXISTS guests (" +
+            "guest_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "name TEXT NOT NULL, " +
+            "id_proof TEXT NOT NULL, " +
+            "contact TEXT NOT NULL, " +
+            "loyalty_tier TEXT DEFAULT 'NONE' NOT NULL, " +
+            "booking_count INTEGER DEFAULT 0 NOT NULL" +
+            ")";
+
         String createBookings = """
-    CREATE TABLE IF NOT EXISTS bookings (
-        booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        guest_id INTEGER NOT NULL,
-        room_no INTEGER NOT NULL,
-        check_in TEXT NOT NULL,
-        check_out TEXT NOT NULL,
-        bill REAL NOT NULL,
-        FOREIGN KEY (guest_id) REFERENCES guests(guest_id),
-        FOREIGN KEY (room_no) REFERENCES rooms(room_no)
-    )
-    """;
+            CREATE TABLE IF NOT EXISTS bookings (
+                booking_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                guest_id INTEGER NOT NULL,
+                room_no INTEGER NOT NULL,
+                check_in TEXT NOT NULL,
+                check_out TEXT NOT NULL,
+                bill REAL NOT NULL,
+                FOREIGN KEY (guest_id) REFERENCES guests(guest_id),
+                FOREIGN KEY (room_no) REFERENCES rooms(room_no)
+            )
+            """;
 
         try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
             stmt.execute(createRooms);
-            // TODO (Rishik): stmt.execute(createGuests);
-             stmt.execute(createBookings);
+            stmt.execute(createGuestsTable);
+            stmt.execute(createBookings);
         } catch (SQLException e) {
             System.out.println("db initialization error: " + e.getMessage());
         }
@@ -259,14 +268,120 @@ public class DatabaseManager {
         return basePrice >= 0;
     }
 
-    // TODO (Rishik): 4. Register a new guest
-    // public static void addGuest(String name, String idProof, String contact) { ... }
+    private static boolean isValidGuestContact(String contact) {
+        return contact != null && contact.trim().matches("\\d{10}");
+    }
 
-    // TODO (Rishik): 5. Fetch all guests
-    // public static ArrayList<Guest> getAllGuests() { ... }
+    public static boolean addGuest(String name, String idProof, String contact) {
+        if (name == null || name.trim().isEmpty()) {
+            System.out.println("Error: Guest name cannot be empty");
+            return false;
+        }
 
-    // TODO (Rishik): Fetch specific guest to check their tier
-    // public static Guest getGuest(int guestId) { ... }
+        if (idProof == null || idProof.trim().isEmpty()) {
+            System.out.println("Error: Guest ID proof cannot be empty");
+            return false;
+        }
+
+        if (contact == null || contact.trim().isEmpty()) {
+            System.out.println("Error: Guest contact cannot be empty");
+            return false;
+        }
+
+        if (!isValidGuestContact(contact)) {
+            System.out.println("Error: Guest contact must be a valid 10-digit number");
+            return false;
+        }
+
+        String trimmedName = name.trim();
+        String trimmedIdProof = idProof.trim();
+        String trimmedContact = contact.trim();
+
+        String sql = "INSERT INTO guests (name, id_proof, contact) "
+                   + "VALUES (?, ?, ?)";
+
+        try (Connection conn = connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, trimmedName);
+            pstmt.setString(2, trimmedIdProof);
+            pstmt.setString(3, trimmedContact);
+
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Guest registered successfully.");
+                return true;
+            }
+
+            return false;
+
+        } catch (SQLException e) {
+            System.out.println("Error adding guest: " + e.getMessage());
+            return false;
+        }
+    }
+
+   public static ArrayList<Guest> getAllGuests() throws SQLException {
+
+    ArrayList<Guest> guests = new ArrayList<>();
+
+    String sql = "SELECT guest_id, name, id_proof, contact, "
+               + "loyalty_tier, booking_count "
+               + "FROM guests ORDER BY guest_id";
+
+    try (Connection conn = connect();
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql)) {
+
+        while (rs.next()) {
+
+            Guest guest = new Guest(
+                    rs.getInt("guest_id"),
+                    rs.getString("name"),
+                    rs.getString("id_proof"),
+                    rs.getString("contact"),
+                    rs.getString("loyalty_tier"),
+                    rs.getInt("booking_count")
+            );
+
+            guests.add(guest);
+        }
+
+    }
+
+    return guests;
+}
+
+
+    public static Guest getGuest(int guestId) throws SQLException {
+
+    String sql = "SELECT guest_id, name, id_proof, contact, "
+               + "loyalty_tier, booking_count "
+               + "FROM guests WHERE guest_id = ?";
+
+    try (Connection conn = connect();
+         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+        pstmt.setInt(1, guestId);
+
+        try (ResultSet rs = pstmt.executeQuery()) {
+
+            if (rs.next()) {
+
+                return new Guest(
+                        rs.getInt("guest_id"),
+                        rs.getString("name"),
+                        rs.getString("id_proof"),
+                        rs.getString("contact"),
+                        rs.getString("loyalty_tier"),
+                        rs.getInt("booking_count")
+                );
+            }
+        }
+    }
+
+    return null;
+}
 
     public static void bookRoom(int guestId, int roomNo, String checkIn,
                                String checkOut, double bill) {
