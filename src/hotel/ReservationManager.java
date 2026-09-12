@@ -16,18 +16,60 @@ public class ReservationManager {
 
     // Room Inventory Operations
 
-    // TODO (Ann): Adds a new room to the hotel inventory.
-    // public static void addRoom(int roomNo, String roomType, double basePrice) { ... }
+     // Adds a new room to the hotel inventory.
+    public static void addRoom(
+            int roomNo,
+            String roomType,
+            double basePrice) {
 
-    // TODO (Ann): Removes an existing room from the hotel inventory.
-    // public static void removeRoom(int roomNo) { ... }
+        DatabaseManager.addRoom(roomNo, roomType, basePrice);
+    }
 
-    // TODO (Ann): Updates details (type and price) of an existing room.
-    // public static void updateRoom(int roomNo, String roomType, double basePrice) { ... }
 
-    // TODO (Ann): Retrieves all available rooms, optionally filtered by room type.
-    // public static void getAvailableRooms(String typeFilter) { ... }
+    // Removes an existing room from the hotel inventory.
+    public static void removeRoom(int roomNo) {
 
+        DatabaseManager.removeRoom(roomNo);
+    }
+
+
+    // Updates details (type and price) of an existing room.
+    public static void updateRoom(
+            int roomNo,
+            String roomType,
+            double basePrice) {
+
+        DatabaseManager.updateRoom(roomNo, roomType, basePrice);
+    }
+
+
+    // Retrieves all available rooms,
+    // optionally filtered by room type.
+    public static void getAvailableRooms(String typeFilter) {
+
+        ArrayList<Room> rooms =
+                DatabaseManager.getAvailableRooms();
+        String normalizedTypeFilter =
+            typeFilter == null ? null : typeFilter.trim();
+
+        boolean found = false;
+
+        for (Room room : rooms) {
+
+                if (normalizedTypeFilter == null ||
+                    normalizedTypeFilter.isEmpty() ||
+                    room.getRoomType().equalsIgnoreCase(normalizedTypeFilter)) {
+
+                System.out.println(room);
+                System.out.println("--------------------");
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No available rooms found.");
+        }
+    }
     // Booking / Reservation Operations
 
     /**
