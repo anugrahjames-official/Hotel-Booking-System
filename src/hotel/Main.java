@@ -157,4 +157,158 @@ public class Main {
 
     // Book a room
     private static void bookRoom() {
-        
+        System.out.println("\n---------- Book Room ----------");
+
+        try {
+
+            System.out.print("Enter guest ID: ");
+            int guestId = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Enter room number: ");
+            int roomNo = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Enter check-in date (dd-MM-yyyy): ");
+            String checkIn = scanner.nextLine();
+
+            System.out.print("Enter check-out date (dd-MM-yyyy): ");
+            String checkOut = scanner.nextLine();
+
+            boolean success = ReservationManager.bookRoom(
+                    guestId,
+                    roomNo,
+                    checkIn,
+                    checkOut
+            );
+
+            if (success) {
+                System.out.println("Booking completed successfully.");
+            }
+
+        } catch (NumberFormatException e) {
+
+            System.out.println("Please enter valid numbers.");
+
+        } catch (Exception e) {
+
+            System.out.println("Error booking room: "
+                    + e.getMessage());
+        }
+    }
+
+
+    // View all bookings
+    private static void viewAllBookings() {
+
+        System.out.println("\n---------- All Bookings ----------");
+
+        ArrayList<Booking> bookings =
+                DatabaseManager.getAllBookings();
+
+        if (bookings.isEmpty()) {
+            System.out.println("No bookings found.");
+            return;
+        }
+
+        for (Booking booking : bookings) {
+            System.out.println(booking);
+        }
+    }
+
+
+    // Cancel a booking
+    private static void cancelBooking() {
+
+        System.out.println("\n---------- Cancel Booking ----------");
+
+        try {
+
+            System.out.print("Enter booking ID: ");
+            int bookingId = Integer.parseInt(scanner.nextLine());
+
+            ReservationManager.cancelBooking(bookingId);
+
+        } catch (NumberFormatException e) {
+
+            System.out.println("Please enter a valid booking ID.");
+        }
+    }
+
+
+    // Add a new room
+    private static void addRoom() {
+
+        System.out.println("\n---------- Add Room ----------");
+
+        try {
+
+            System.out.print("Enter room number: ");
+            int roomNo = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Enter room type: ");
+            String roomType = scanner.nextLine();
+
+            System.out.print("Enter base price: ");
+            double basePrice =
+                    Double.parseDouble(scanner.nextLine());
+
+            ReservationManager.addRoom(
+                    roomNo,
+                    roomType,
+                    basePrice
+            );
+
+        } catch (NumberFormatException e) {
+
+            System.out.println("Please enter valid numbers.");
+        }
+    }
+
+
+    // Remove a room
+    private static void removeRoom() {
+
+        System.out.println("\n---------- Remove Room ----------");
+
+        try {
+
+            System.out.print("Enter room number: ");
+            int roomNo = Integer.parseInt(scanner.nextLine());
+
+            ReservationManager.removeRoom(roomNo);
+
+        } catch (NumberFormatException e) {
+
+            System.out.println("Please enter a valid room number.");
+        }
+    }
+
+
+    // Update room
+    private static void updateRoom() {
+
+        System.out.println("\n---------- Update Room ----------");
+
+        try {
+
+            System.out.print("Enter room number: ");
+            int roomNo = Integer.parseInt(scanner.nextLine());
+
+            System.out.print("Enter new room type: ");
+            String roomType = scanner.nextLine();
+
+            System.out.print("Enter new base price: ");
+            double basePrice =
+                    Double.parseDouble(scanner.nextLine());
+
+            ReservationManager.updateRoom(
+                    roomNo,
+                    roomType,
+                    basePrice
+            );
+
+        } catch (NumberFormatException e) {
+
+            System.out.println("Please enter valid numbers.");
+        }
+    }
+}
