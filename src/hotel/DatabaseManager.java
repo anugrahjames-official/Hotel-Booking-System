@@ -385,6 +385,12 @@ public class DatabaseManager {
 
     public static void bookRoom(int guestId, int roomNo, String checkIn,
                                String checkOut, double bill) {
+public static boolean bookRoom(
+        int guestId,
+        int roomNo,
+        String checkIn,
+        String checkOut,
+        double bill) {
 
     String insertBooking = """
         INSERT INTO bookings
@@ -430,6 +436,7 @@ public class DatabaseManager {
             }
 
             // 3. Increase guest booking count
+            // 3. Increase booking count
             countStmt.setInt(1, guestId);
 
             if (countStmt.executeUpdate() == 0) {
@@ -441,9 +448,11 @@ public class DatabaseManager {
             conn.commit();
 
             // 5. Update loyalty tier
+            // 4. Update loyalty tier
             updateLoyaltyTier(conn, guestId);
 
             // 6. SECOND COMMIT
+            // 5. Commit all changes together
             conn.commit();
 
             // 7. Success message
@@ -451,6 +460,7 @@ public class DatabaseManager {
             System.out.println("Bill: Rs." + bill);
 
             
+            return true;
 
         } catch (SQLException e) {
 
@@ -466,10 +476,13 @@ public class DatabaseManager {
 
                 System.out.println("Rollback failed.");
                 System.out.println("Rollback error: "
+                System.out.println(
+                        "Rollback error: "
                         + rollbackError.getMessage());
             }
 
            
+            return false;
 
         } finally {
 
@@ -480,9 +493,12 @@ public class DatabaseManager {
     } catch (SQLException e) {
 
         System.out.println("Database connection error: "
+        System.out.println(
+                "Database connection error: "
                 + e.getMessage());
 
        
+        return false;
     }
 }
 
@@ -497,6 +513,9 @@ public class DatabaseManager {
             newTier = "GOLD";
         else if (g.getBookingCount() >= 3)
             newTier = "SILVER";
+private static void updateLoyaltyTier(
+        Connection conn,
+        int guestId) throws SQLException {
 
         if (!newTier.equals(g.getLoyaltyTier())) {
             String updateTier = "UPDATE guests SET loyalty_tier = ? WHERE guest_id = ?";
@@ -505,9 +524,57 @@ public class DatabaseManager {
                 pstmt.setInt(2, guestId);
                 pstmt.executeUpdate();
                 System.out.println("congratulations guest upgraded to " + newTier + " tier");
+    String selectGuest =
+            "SELECT booking_count, loyalty_tier " +
+            "FROM guests WHERE guest_id = ?";
+
+    int bookingCount;
+    String currentTier;
+
+    try (PreparedStatement pstmt =
+                 conn.prepareStatement(selectGuest)) {
+
+        pstmt.setInt(1, guestId);
+
+        try (ResultSet rs = pstmt.executeQuery()) {
+
+            if (!rs.next()) {
+                return;
             }
+
+            bookingCount = rs.getInt("booking_count");
+            currentTier = rs.getString("loyalty_tier");
         }
     }
+
+    String newTier = "NONE";
+
+    if (bookingCount >= 7) {
+        newTier = "GOLD";
+    } else if (bookingCount >= 3) {
+        newTier = "SILVER";
+    }
+
+    if (!newTier.equals(currentTier)) {
+
+        String updateTier =
+                "UPDATE guests SET loyalty_tier = ? " +
+                "WHERE guest_id = ?";
+
+        try (PreparedStatement pstmt =
+                     conn.prepareStatement(updateTier)) {
+
+            pstmt.setString(1, newTier);
+            pstmt.setInt(2, guestId);
+
+            pstmt.executeUpdate();
+
+            System.out.println(
+                    "Congratulations guest upgraded to "
+                    + newTier + " tier");
+        }
+    }
+}
 
     public static ArrayList<Booking> getAllBookings() {
 
