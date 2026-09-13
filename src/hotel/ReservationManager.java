@@ -79,66 +79,96 @@ public class ReservationManager {
      * 
      * @return true if the booking was processed successfully, false otherwise.
      */
-    public static boolean bookRoom(int guestId, int roomNo, String checkInStr, String checkOutStr) {
-        try {
-            // 1. Verify guest exists
-            Guest guest = DatabaseManager.getGuest(guestId);
-            if (guest == null) {
-                System.out.println("guest not found");
-                return false;
-            }
+public static boolean bookRoom(int guestId, int roomNo,
+                               String checkInStr, String checkOutStr) {
+    try {
+        // 1. Verify guest exists
+        Guest guest = DatabaseManager.getGuest(guestId);
 
-            // 2. Verify room exists and is available
-            Room room = DatabaseManager.getRoom(roomNo);
-            if (room == null || !room.isAvailable()) {
-                System.out.println("room not available or doesn't exist");
-                return false;
-            }
-
-            // 3. Parse and validate dates
-            LocalDate checkIn = LocalDate.parse(checkInStr, inputFormatter);
-            LocalDate checkOut = LocalDate.parse(checkOutStr, inputFormatter);
-
-            long nights = ChronoUnit.DAYS.between(checkIn, checkOut);
-            if (nights <= 0) {
-                System.out.println("check-out must be after check-in");
-                return false;
-            }
-
-            // 4. Calculate Bill
-            double baseAmount = nights * room.getBasePrice();
-
-            // Surcharge during peak months: January (1), May (5), December (12)
-            double surcharge = 0;
-            int month = checkIn.getMonthValue();
-            if (month == 5 || month == 12 || month == 1) {
-                surcharge = baseAmount * 0.10; // 10% peak season surcharge
-            }
-
-            double subtotal = baseAmount + surcharge;
-
-            // Loyalty Discount based on Guest's loyalty tier
-            double discount = 0;
-            if ("GOLD".equalsIgnoreCase(guest.getLoyaltyTier())) {
-                discount = subtotal * 0.10; // 10% discount
-            } else if ("SILVER".equalsIgnoreCase(guest.getLoyaltyTier())) {
-                discount = subtotal * 0.05; // 5% discount
-            }
-
-            double finalBill = subtotal - discount;
-
-            // 5. Convert to Database format & persist booking
-            String dbIn = checkIn.format(dbFormatter);
-            String dbOut = checkOut.format(dbFormatter);
-
-            DatabaseManager.bookRoom(guestId, roomNo, dbIn, dbOut, finalBill);
-            return true;
-
-        } catch (Exception e) {
-            System.out.println("error processing booking: please check your inputs");
+        if (guest == null) {
+            System.out.println("guest not found");
             return false;
         }
+
+        // 2. Verify room exists and is available
+        Room room = DatabaseManager.getRoom(roomNo);
+
+        if (room == null || !room.isAvailable()) {
+            System.out.println("room not available or doesn't exist");
+            return false;
+        }
+
+        // 3. Parse and validate dates
+        LocalDate checkIn =
+                LocalDate.parse(checkInStr, inputFormatter);
+
+        LocalDate checkOut =
+                LocalDate.parse(checkOutStr, inputFormatter);
+
+        long nights =
+                ChronoUnit.DAYS.between(checkIn, checkOut);
+
+        if (nights <= 0) {
+            System.out.println("check-out must be after check-in");
+            return false;
+        }
+
+        // 4. Calculate bill
+        double baseAmount =
+                nights * room.getBasePrice();
+
+        double surcharge = 0;
+
+        int month = checkIn.getMonthValue();
+
+        if (month == 5 || month == 12 || month == 1) {
+            surcharge = baseAmount * 0.10;
+        }
+
+        double subtotal =
+                baseAmount + surcharge;
+
+        // Loyalty discount
+        double discount = 0;
+
+        if ("GOLD".equalsIgnoreCase(
+                guest.getLoyaltyTier())) {
+
+            discount = subtotal * 0.10;
+
+        } else if ("SILVER".equalsIgnoreCase(
+                guest.getLoyaltyTier())) {
+
+            discount = subtotal * 0.05;
+        }
+
+        double finalBill =
+                subtotal - discount;
+
+        // 5. Convert dates to database format
+        String dbIn =
+                checkIn.format(dbFormatter);
+
+        String dbOut =
+                checkOut.format(dbFormatter);
+
+        // 6. Save booking and return actual result
+        return DatabaseManager.bookRoom(
+                guestId,
+                roomNo,
+                dbIn,
+                dbOut,
+                finalBill);
+
+    } catch (Exception e) {
+
+        System.out.println(
+                "error processing booking: "
+                + "please check your inputs");
+
+        return false;
     }
+}
 
     public static void cancelBooking(int bookingId) {
     DatabaseManager.cancelBooking(bookingId);
