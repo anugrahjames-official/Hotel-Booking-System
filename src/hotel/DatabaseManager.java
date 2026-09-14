@@ -12,22 +12,28 @@ import java.sql.Statement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-// Centralized database logic to keep the project simple
+// Centralized database logic
 public class DatabaseManager {
-    // Relative path to SQLite DB file
+
     private static final String URL = "jdbc:sqlite:database/hotel.db";
 
-    // 1. Establish connection to SQLite
+
+    // 1. Establish connection
     public static Connection connect() throws SQLException {
+
         java.io.File dbDir = new java.io.File("database");
+
         if (!dbDir.exists()) {
             dbDir.mkdirs();
         }
+
         return DriverManager.getConnection(URL);
     }
 
-    // 2. Initialize tables
+
+    // 2. Initialize database tables
     public static void initializeDatabase() {
+
         String createRooms = """
             CREATE TABLE IF NOT EXISTS rooms (
                 room_no INTEGER PRIMARY KEY,
@@ -60,17 +66,22 @@ public class DatabaseManager {
             )
             """;
 
-        try (Connection conn = connect(); Statement stmt = conn.createStatement()) {
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement()) {
+
             stmt.execute(createRooms);
             stmt.execute(createGuestsTable);
             stmt.execute(createBookings);
+
         } catch (SQLException e) {
-            System.out.println("db initialization error: " + e.getMessage());
+            System.out.println(
+                    "DB initialization error: " + e.getMessage());
         }
     }
-     
-       // 3. Fetch all available rooms
-     public static ArrayList<Room> getAvailableRooms() {
+
+
+    // 3. Get all available rooms
+    public static ArrayList<Room> getAvailableRooms() {
 
         ArrayList<Room> rooms = new ArrayList<>();
 
@@ -87,23 +98,27 @@ public class DatabaseManager {
             while (rs.next()) {
 
                 Room room = new Room(
-                    rs.getInt("room_no"),
-                    rs.getString("room_type"),
-                    rs.getDouble("base_price"),
-                    rs.getInt("available") == 1
+                        rs.getInt("room_no"),
+                        rs.getString("room_type"),
+                        rs.getDouble("base_price"),
+                        rs.getInt("available") == 1
                 );
 
                 rooms.add(room);
             }
+
         } catch (SQLException e) {
-            System.out.println("error fetching available rooms: "
+
+            System.out.println(
+                    "Error fetching available rooms: "
                     + e.getMessage());
         }
 
         return rooms;
     }
 
-      // Fetch a specific room to get its price
+
+    // Get a specific room
     public static Room getRoom(int roomNo) {
 
         String sql = """
@@ -121,25 +136,26 @@ public class DatabaseManager {
 
                 if (rs.next()) {
 
-                    Room room = new Room(
-                        rs.getInt("room_no"),
-                        rs.getString("room_type"),
-                        rs.getDouble("base_price"),
-                        rs.getInt("available") == 1
+                    return new Room(
+                            rs.getInt("room_no"),
+                            rs.getString("room_type"),
+                            rs.getDouble("base_price"),
+                            rs.getInt("available") == 1
                     );
-
-                    return room;
                 }
             }
+
         } catch (SQLException e) {
-            System.out.println("error fetching room: "
-                    + e.getMessage());
+
+            System.out.println(
+                    "Error fetching room: " + e.getMessage());
         }
 
         return null;
     }
 
-    // Add a new room
+
+    // Add a room
     public static void addRoom(
             int roomNo,
             String roomType,
@@ -176,12 +192,14 @@ public class DatabaseManager {
             System.out.println("Room added successfully.");
 
         } catch (SQLException e) {
-            System.out.println("error adding room: "
-                    + e.getMessage());
+
+            System.out.println(
+                    "Error adding room: " + e.getMessage());
         }
     }
 
-    // Remove a room only when it is available and has no booking history
+
+    // Remove room only if available and has no booking history
     public static void removeRoom(int roomNo) {
 
         String deleteRoom = """
@@ -189,31 +207,35 @@ public class DatabaseManager {
             WHERE room_no = ?
               AND available = 1
               AND NOT EXISTS (
-                  SELECT 1 FROM bookings WHERE bookings.room_no = rooms.room_no
+                  SELECT 1
+                  FROM bookings
+                  WHERE bookings.room_no = rooms.room_no
               )
             """;
 
-           try (Connection conn = connect();
-               PreparedStatement deleteStmt =
-                         conn.prepareStatement(deleteRoom)) {
+        try (Connection conn = connect();
+             PreparedStatement deleteStmt =
+                     conn.prepareStatement(deleteRoom)) {
 
-                deleteStmt.setInt(1, roomNo);
+            deleteStmt.setInt(1, roomNo);
 
-                int rows = deleteStmt.executeUpdate();
+            int rows = deleteStmt.executeUpdate();
 
-                if (rows > 0) {
-                    System.out.println("Room removed successfully.");
-                } else {
-                    System.out.println(
-                        "Room not found, currently booked, or has booking history."
-                    );
-                }
+            if (rows > 0) {
+                System.out.println("Room removed successfully.");
+            } else {
+                System.out.println(
+                        "Room not found, currently booked, "
+                        + "or has booking history.");
+            }
 
         } catch (SQLException e) {
-            System.out.println("error removing room: "
-                    + e.getMessage());
+
+            System.out.println(
+                    "Error removing room: " + e.getMessage());
         }
     }
+
 
     // Update room type and price
     public static void updateRoom(
@@ -255,13 +277,17 @@ public class DatabaseManager {
             }
 
         } catch (SQLException e) {
-            System.out.println("error updating room: "
-                    + e.getMessage());
+
+            System.out.println(
+                    "Error updating room: " + e.getMessage());
         }
     }
 
+
+    // Validation methods
     private static boolean isValidRoomType(String roomType) {
-        return roomType != null && !roomType.trim().isEmpty();
+        return roomType != null &&
+               !roomType.trim().isEmpty();
     }
 
     private static boolean isValidBasePrice(double basePrice) {
@@ -269,106 +295,90 @@ public class DatabaseManager {
     }
 
     private static boolean isValidGuestContact(String contact) {
-        return contact != null && contact.trim().matches("\\d{10}");
+        return contact != null &&
+               contact.trim().matches("\\d{10}");
     }
 
-    public static boolean addGuest(String name, String idProof, String contact) {
+
+    // Add guest
+    public static boolean addGuest(
+            String name,
+            String idProof,
+            String contact) {
+
         if (name == null || name.trim().isEmpty()) {
-            System.out.println("Error: Guest name cannot be empty");
+            System.out.println(
+                    "Error: Guest name cannot be empty");
             return false;
         }
 
         if (idProof == null || idProof.trim().isEmpty()) {
-            System.out.println("Error: Guest ID proof cannot be empty");
+            System.out.println(
+                    "Error: Guest ID proof cannot be empty");
             return false;
         }
 
         if (contact == null || contact.trim().isEmpty()) {
-            System.out.println("Error: Guest contact cannot be empty");
+            System.out.println(
+                    "Error: Guest contact cannot be empty");
             return false;
         }
 
         if (!isValidGuestContact(contact)) {
-            System.out.println("Error: Guest contact must be a valid 10-digit number");
+            System.out.println(
+                    "Error: Guest contact must be a valid "
+                    + "10-digit number");
             return false;
         }
 
-        String trimmedName = name.trim();
-        String trimmedIdProof = idProof.trim();
-        String trimmedContact = contact.trim();
-
-        String sql = "INSERT INTO guests (name, id_proof, contact) "
-                   + "VALUES (?, ?, ?)";
+        String sql =
+                "INSERT INTO guests (name, id_proof, contact) "
+                + "VALUES (?, ?, ?)";
 
         try (Connection conn = connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt =
+                     conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, trimmedName);
-            pstmt.setString(2, trimmedIdProof);
-            pstmt.setString(3, trimmedContact);
+            pstmt.setString(1, name.trim());
+            pstmt.setString(2, idProof.trim());
+            pstmt.setString(3, contact.trim());
 
             int rows = pstmt.executeUpdate();
+
             if (rows > 0) {
-                System.out.println("Guest registered successfully.");
+                System.out.println(
+                        "Guest registered successfully.");
                 return true;
             }
 
-            return false;
-
         } catch (SQLException e) {
-            System.out.println("Error adding guest: " + e.getMessage());
-            return false;
-        }
-    }
 
-   public static ArrayList<Guest> getAllGuests() throws SQLException {
-
-    ArrayList<Guest> guests = new ArrayList<>();
-
-    String sql = "SELECT guest_id, name, id_proof, contact, "
-               + "loyalty_tier, booking_count "
-               + "FROM guests ORDER BY guest_id";
-
-    try (Connection conn = connect();
-         Statement stmt = conn.createStatement();
-         ResultSet rs = stmt.executeQuery(sql)) {
-
-        while (rs.next()) {
-
-            Guest guest = new Guest(
-                    rs.getInt("guest_id"),
-                    rs.getString("name"),
-                    rs.getString("id_proof"),
-                    rs.getString("contact"),
-                    rs.getString("loyalty_tier"),
-                    rs.getInt("booking_count")
-            );
-
-            guests.add(guest);
+            System.out.println(
+                    "Error adding guest: " + e.getMessage());
         }
 
+        return false;
     }
 
-    return guests;
-}
 
+    // Get all guests
+    public static ArrayList<Guest> getAllGuests()
+            throws SQLException {
 
-    public static Guest getGuest(int guestId) throws SQLException {
+        ArrayList<Guest> guests = new ArrayList<>();
 
-    String sql = "SELECT guest_id, name, id_proof, contact, "
-               + "loyalty_tier, booking_count "
-               + "FROM guests WHERE guest_id = ?";
+        String sql =
+                "SELECT guest_id, name, id_proof, contact, "
+                + "loyalty_tier, booking_count "
+                + "FROM guests ORDER BY guest_id";
 
-    try (Connection conn = connect();
-         PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
-        pstmt.setInt(1, guestId);
+            while (rs.next()) {
 
-        try (ResultSet rs = pstmt.executeQuery()) {
-
-            if (rs.next()) {
-
-                return new Guest(
+                Guest guest = new Guest(
                         rs.getInt("guest_id"),
                         rs.getString("name"),
                         rs.getString("id_proof"),
@@ -376,263 +386,386 @@ public class DatabaseManager {
                         rs.getString("loyalty_tier"),
                         rs.getInt("booking_count")
                 );
+
+                guests.add(guest);
             }
         }
+
+        return guests;
     }
 
-    return null;
-}
 
-    public static void bookRoom(int guestId, int roomNo, String checkIn,
-                               String checkOut, double bill) {
+    // Get a specific guest
+    public static Guest getGuest(int guestId)
+            throws SQLException {
 
-    String insertBooking = """
-        INSERT INTO bookings
-        (guest_id, room_no, check_in, check_out, bill)
-        VALUES (?, ?, ?, ?, ?)
-        """;
+        String sql =
+                "SELECT guest_id, name, id_proof, contact, "
+                + "loyalty_tier, booking_count "
+                + "FROM guests WHERE guest_id = ?";
 
-    String updateRoom =
-            "UPDATE rooms SET available = 0 WHERE room_no = ?";
+        try (Connection conn = connect();
+             PreparedStatement pstmt =
+                     conn.prepareStatement(sql)) {
 
-    String incrementBookingCount =
-            "UPDATE guests SET booking_count = booking_count + 1 " +
-            "WHERE guest_id = ?";
+            pstmt.setInt(1, guestId);
 
-    try (Connection conn = connect()) {
+            try (ResultSet rs = pstmt.executeQuery()) {
 
-        // Start transaction
-        conn.setAutoCommit(false);
+                if (rs.next()) {
 
-        try (PreparedStatement bookingStmt =
-                     conn.prepareStatement(insertBooking);
-             PreparedStatement roomStmt =
-                     conn.prepareStatement(updateRoom);
-             PreparedStatement countStmt =
-                     conn.prepareStatement(incrementBookingCount)) {
-
-            // 1. Insert booking
-            bookingStmt.setInt(1, guestId);
-            bookingStmt.setInt(2, roomNo);
-            bookingStmt.setString(3, checkIn);
-            bookingStmt.setString(4, checkOut);
-            bookingStmt.setDouble(5, bill);
-
-            if (bookingStmt.executeUpdate() == 0) {
-                throw new SQLException("Booking insertion failed.");
-            }
-
-            // 2. Make room unavailable
-            roomStmt.setInt(1, roomNo);
-
-            if (roomStmt.executeUpdate() == 0) {
-                throw new SQLException("Room update failed.");
-            }
-
-            // 3. Increase guest booking count
-            countStmt.setInt(1, guestId);
-
-            if (countStmt.executeUpdate() == 0) {
-                throw new SQLException(
-                        "Guest booking count update failed.");
-            }
-
-            // 4. FIRST COMMIT
-            conn.commit();
-
-            // 5. Update loyalty tier
-            updateLoyaltyTier(conn, guestId);
-
-            // 6. SECOND COMMIT
-            conn.commit();
-
-            // 7. Success message
-            System.out.println("Room booked successfully!");
-            System.out.println("Bill: Rs." + bill);
-
-            
-
-        } catch (SQLException e) {
-
-            System.out.println("Booking failed.");
-            System.out.println("Error: " + e.getMessage());
-
-            // Rollback in separate try-catch
-            try {
-                conn.rollback();
-                System.out.println("Rollback done.");
-
-            } catch (SQLException rollbackError) {
-
-                System.out.println("Rollback failed.");
-                System.out.println("Rollback error: "
-                        + rollbackError.getMessage());
-            }
-
-           
-
-        } finally {
-
-            // Restore auto-commit
-            conn.setAutoCommit(true);
-        }
-
-    } catch (SQLException e) {
-
-        System.out.println("Database connection error: "
-                + e.getMessage());
-
-       
-    }
-}
-
-    // Internal method to update loyalty tier
-    private static void updateLoyaltyTier(Connection conn, int guestId) throws SQLException {
-        Guest g = getGuest(guestId);
-        if (g == null)
-            return;
-
-        String newTier = "NONE";
-        if (g.getBookingCount() >= 7)
-            newTier = "GOLD";
-        else if (g.getBookingCount() >= 3)
-            newTier = "SILVER";
-
-        if (!newTier.equals(g.getLoyaltyTier())) {
-            String updateTier = "UPDATE guests SET loyalty_tier = ? WHERE guest_id = ?";
-            try (PreparedStatement pstmt = conn.prepareStatement(updateTier)) {
-                pstmt.setString(1, newTier);
-                pstmt.setInt(2, guestId);
-                pstmt.executeUpdate();
-                System.out.println("congratulations guest upgraded to " + newTier + " tier");
-            }
-        }
-    }
-
-    public static ArrayList<Booking> getAllBookings() {
-
-    ArrayList<Booking> bookings = new ArrayList<>();
-
-    String sql = "SELECT * FROM bookings";
-
-    try (Connection conn = connect();
-         Statement stmt = conn.createStatement();
-         ResultSet rs = stmt.executeQuery(sql)) {
-
-        while (rs.next()) {
-
-            Booking booking = new Booking(
-                rs.getInt("booking_id"),
-                rs.getInt("guest_id"),
-                rs.getInt("room_no"),
-                rs.getString("check_in"),
-                rs.getString("check_out"),
-                rs.getDouble("bill")
-            );
-
-            bookings.add(booking);
-        }
-
-    } catch (SQLException e) {
-        System.out.println("Error fetching bookings: " + e.getMessage());
-    }
-
-    return bookings;
-    }
-    public static void cancelBooking(int bookingId) {
-
-    String selectRoom =
-            "SELECT room_no FROM bookings WHERE booking_id = ?";
-
-    String deleteBooking =
-            "DELETE FROM bookings WHERE booking_id = ?";
-
-    String updateRoom =
-            "UPDATE rooms SET available = 1 WHERE room_no = ?";
-
-    try (Connection conn = connect();
-         PreparedStatement selectStmt = conn.prepareStatement(selectRoom)) {
-
-        // 1. SELECT first
-        selectStmt.setInt(1, bookingId);
-
-        int roomNo;
-
-        try (ResultSet rs = selectStmt.executeQuery()) {
-
-            // If booking does not exist, stop here
-            if (!rs.next()) {
-                System.out.println("Booking not found.");
-                return;
-            }
-
-            roomNo = rs.getInt("room_no");
-        }
-
-        // 2. Booking exists, so start transaction
-        conn.setAutoCommit(false);
-
-        try {
-
-            // 3. Delete booking
-            try (PreparedStatement deleteStmt =
-                         conn.prepareStatement(deleteBooking)) {
-
-                deleteStmt.setInt(1, bookingId);
-
-                int deletedRows = deleteStmt.executeUpdate();
-
-                if (deletedRows == 0) {
-                    throw new SQLException("Booking deletion failed.");
-                }
-            }
-
-            // 4. Make room available
-            try (PreparedStatement updateStmt =
-                         conn.prepareStatement(updateRoom)) {
-
-                updateStmt.setInt(1, roomNo);
-
-                int updatedRows = updateStmt.executeUpdate();
-
-                if (updatedRows == 0) {
-                    throw new SQLException(
-                            "Room update failed. Room number: " + roomNo
+                    return new Guest(
+                            rs.getInt("guest_id"),
+                            rs.getString("name"),
+                            rs.getString("id_proof"),
+                            rs.getString("contact"),
+                            rs.getString("loyalty_tier"),
+                            rs.getInt("booking_count")
                     );
                 }
             }
+        }
 
-            // 5. Both operations successful
-            conn.commit();
+        return null;
+    }
 
-            System.out.println("Booking cancelled successfully!");
+
+    // Book room
+    public static boolean bookRoom(
+            int guestId,
+            int roomNo,
+            String checkIn,
+            String checkOut,
+            double bill) {
+
+        String insertBooking = """
+            INSERT INTO bookings
+            (guest_id, room_no, check_in, check_out, bill)
+            VALUES (?, ?, ?, ?, ?)
+            """;
+
+        String updateRoom =
+                "UPDATE rooms SET available = 0 "
+                + "WHERE room_no = ?";
+
+        String incrementBookingCount =
+                "UPDATE guests "
+                + "SET booking_count = booking_count + 1 "
+                + "WHERE guest_id = ?";
+
+        try (Connection conn = connect()) {
+
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement bookingStmt =
+                         conn.prepareStatement(insertBooking);
+                 PreparedStatement roomStmt =
+                         conn.prepareStatement(updateRoom);
+                 PreparedStatement countStmt =
+                         conn.prepareStatement(incrementBookingCount)) {
+
+                // 1. Insert booking
+                bookingStmt.setInt(1, guestId);
+                bookingStmt.setInt(2, roomNo);
+                bookingStmt.setString(3, checkIn);
+                bookingStmt.setString(4, checkOut);
+                bookingStmt.setDouble(5, bill);
+
+                if (bookingStmt.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Booking insertion failed.");
+                }
+
+
+                // 2. Make room unavailable
+                roomStmt.setInt(1, roomNo);
+
+                if (roomStmt.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Room update failed.");
+                }
+
+
+                // 3. Increase booking count
+                countStmt.setInt(1, guestId);
+
+                if (countStmt.executeUpdate() == 0) {
+                    throw new SQLException(
+                            "Guest booking count update failed.");
+                }
+
+
+                // 4. Update loyalty tier
+                updateLoyaltyTier(conn, guestId);
+
+
+                // 5. Commit all operations together
+                conn.commit();
+
+
+                System.out.println(
+                        "Room booked successfully!");
+
+                System.out.println(
+                        "Bill: Rs." + bill);
+
+                return true;
+
+
+            } catch (SQLException e) {
+
+                System.out.println("Booking failed.");
+                System.out.println(
+                        "Error: " + e.getMessage());
+
+                try {
+                    conn.rollback();
+                    System.out.println("Rollback done.");
+                } catch (SQLException rollbackError) {
+                    System.out.println("Rollback failed.");
+                    System.out.println(
+                            "Rollback error: "
+                            + rollbackError.getMessage());
+                }
+
+                return false;
+
+            } finally {
+
+                conn.setAutoCommit(true);
+            }
 
         } catch (SQLException e) {
 
-            // 6. Something failed → rollback
-            try {
-                conn.rollback();
-                System.out.println("Booking cancellation failed.");
-                System.out.println("Error: " + e.getMessage());
-                System.out.println("Rollback done.");
+            System.out.println(
+                    "Database connection error: "
+                    + e.getMessage());
 
-            } catch (SQLException rollbackError) {
-                System.out.println("Rollback failed.");
-                System.out.println("Rollback error: "
-                        + rollbackError.getMessage());
+            return false;
+        }
+    }
+
+
+    // Update loyalty tier using the same connection
+    private static void updateLoyaltyTier(
+            Connection conn,
+            int guestId) throws SQLException {
+
+        String selectGuest =
+                "SELECT booking_count, loyalty_tier "
+                + "FROM guests WHERE guest_id = ?";
+
+        int bookingCount;
+        String currentTier;
+
+        try (PreparedStatement pstmt =
+                     conn.prepareStatement(selectGuest)) {
+
+            pstmt.setInt(1, guestId);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+
+                if (!rs.next()) {
+                    return;
+                }
+
+                bookingCount =
+                        rs.getInt("booking_count");
+
+                currentTier =
+                        rs.getString("loyalty_tier");
             }
-
-        } finally {
-
-            // 7. Restore auto-commit
-            conn.setAutoCommit(true);
         }
 
-    } catch (SQLException e) {
 
-        // Database connection / SELECT error
-        System.out.println("Database error.");
-        System.out.println("Error: " + e.getMessage());
+        String newTier = "NONE";
+
+        if (bookingCount >= 7) {
+            newTier = "GOLD";
+        } else if (bookingCount >= 3) {
+            newTier = "SILVER";
+        }
+
+
+        if (!newTier.equals(currentTier)) {
+
+            String updateTier =
+                    "UPDATE guests "
+                    + "SET loyalty_tier = ? "
+                    + "WHERE guest_id = ?";
+
+            try (PreparedStatement pstmt =
+                         conn.prepareStatement(updateTier)) {
+
+                pstmt.setString(1, newTier);
+                pstmt.setInt(2, guestId);
+
+                pstmt.executeUpdate();
+
+                System.out.println(
+                        "Congratulations! Guest upgraded to "
+                        + newTier + " tier.");
+            }
+        }
+    }
+
+
+    // Get all bookings
+    public static ArrayList<Booking> getAllBookings() {
+
+        ArrayList<Booking> bookings =
+                new ArrayList<>();
+
+        String sql = "SELECT * FROM bookings";
+
+        try (Connection conn = connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+
+                Booking booking = new Booking(
+                        rs.getInt("booking_id"),
+                        rs.getInt("guest_id"),
+                        rs.getInt("room_no"),
+                        rs.getString("check_in"),
+                        rs.getString("check_out"),
+                        rs.getDouble("bill")
+                );
+
+                bookings.add(booking);
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println(
+                    "Error fetching bookings: "
+                    + e.getMessage());
+        }
+
+        return bookings;
+    }
+
+
+    // Cancel booking
+    public static void cancelBooking(int bookingId) {
+
+        String selectRoom =
+                "SELECT room_no FROM bookings "
+                + "WHERE booking_id = ?";
+
+        String deleteBooking =
+                "DELETE FROM bookings "
+                + "WHERE booking_id = ?";
+
+        String updateRoom =
+                "UPDATE rooms SET available = 1 "
+                + "WHERE room_no = ?";
+
+
+        try (Connection conn = connect();
+             PreparedStatement selectStmt =
+                     conn.prepareStatement(selectRoom)) {
+
+            // 1. Select room number first
+            selectStmt.setInt(1, bookingId);
+
+            int roomNo;
+
+            try (ResultSet rs =
+                         selectStmt.executeQuery()) {
+
+                if (!rs.next()) {
+                    System.out.println(
+                            "Booking not found.");
+                    return;
+                }
+
+                roomNo = rs.getInt("room_no");
+            }
+
+
+            // 2. Start transaction
+            conn.setAutoCommit(false);
+
+            try {
+
+                // 3. Delete booking
+                try (PreparedStatement deleteStmt =
+                             conn.prepareStatement(deleteBooking)) {
+
+                    deleteStmt.setInt(1, bookingId);
+
+                    int deletedRows =
+                            deleteStmt.executeUpdate();
+
+                    if (deletedRows == 0) {
+                        throw new SQLException(
+                                "Booking deletion failed.");
+                    }
+                }
+
+
+                // 4. Make room available
+                try (PreparedStatement updateStmt =
+                             conn.prepareStatement(updateRoom)) {
+
+                    updateStmt.setInt(1, roomNo);
+
+                    int updatedRows =
+                            updateStmt.executeUpdate();
+
+                    if (updatedRows == 0) {
+                        throw new SQLException(
+                                "Room update failed. "
+                                + "Room number: " + roomNo);
+                    }
+                }
+
+
+                // 5. Commit
+                conn.commit();
+
+                System.out.println(
+                        "Booking cancelled successfully!");
+
+            } catch (SQLException e) {
+
+                try {
+
+                    conn.rollback();
+
+                    System.out.println(
+                            "Booking cancellation failed.");
+
+                    System.out.println(
+                            "Error: " + e.getMessage());
+
+                    System.out.println(
+                            "Rollback done.");
+
+                } catch (SQLException rollbackError) {
+
+                    System.out.println(
+                            "Rollback failed.");
+
+                    System.out.println(
+                            "Rollback error: "
+                            + rollbackError.getMessage());
+                }
+
+            } finally {
+
+                conn.setAutoCommit(true);
+            }
+
+        } catch (SQLException e) {
+
+            System.out.println("Database error.");
+
+            System.out.println(
+                    "Error: " + e.getMessage());
+        }
     }
 }
-}
+
