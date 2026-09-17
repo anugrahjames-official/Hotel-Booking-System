@@ -2,49 +2,91 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Hotel Booking System</title>
   <link rel="stylesheet" href="/css/style.css">
+  <!-- Lucide Icons for Apple-like minimal icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+  <!-- Abstract Blurred Background Blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
-        <h1>🏨 Hotel</h1>
-        <p>Booking System</p>
+        <div class="brand-icon">
+          <i data-lucide="building-2"></i>
+        </div>
+        <div>
+          <h1>Hotel</h1>
+          <p>Booking System</p>
+        </div>
       </div>
       <nav>
-        <button class="nav-btn active" data-section="dashboard-section">📊 Dashboard</button>
-        <button class="nav-btn" data-section="rooms-section">🛏️ Rooms</button>
-        <button class="nav-btn" data-section="guests-section">👤 Guests</button>
-        <button class="nav-btn" data-section="bookings-section">📋 Bookings</button>
+        <button class="nav-btn active" data-section="dashboard-section">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-section="rooms-section">
+          <i data-lucide="bed-double"></i>
+          <span>Rooms</span>
+        </button>
+        <button class="nav-btn" data-section="guests-section">
+          <i data-lucide="users"></i>
+          <span>Guests</span>
+        </button>
+        <button class="nav-btn" data-section="bookings-section">
+          <i data-lucide="calendar-check"></i>
+          <span>Bookings</span>
+        </button>
       </nav>
     </aside>
+    
     <main class="main">
       <header class="header">
         <h2 id="page-title">Dashboard</h2>
         <div id="header-actions"></div>
       </header>
+      
       <div class="content">
+        <!-- Dashboard Section -->
         <section id="dashboard-section" class="section active">
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-label">Total Rooms</div>
-              <div class="stat-number" id="stat-total-rooms">-</div>
+              <div class="stat-icon"><i data-lucide="bed"></i></div>
+              <div>
+                <div class="stat-label">Total Rooms</div>
+                <div class="stat-number" id="stat-total-rooms">-</div>
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Available</div>
-              <div class="stat-number" id="stat-available-rooms">-</div>
+              <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+              <div>
+                <div class="stat-label">Available</div>
+                <div class="stat-number" id="stat-available-rooms">-</div>
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Total Guests</div>
-              <div class="stat-number" id="stat-total-guests">-</div>
+              <div class="stat-icon"><i data-lucide="users"></i></div>
+              <div>
+                <div class="stat-label">Total Guests</div>
+                <div class="stat-number" id="stat-total-guests">-</div>
+              </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Total Bookings</div>
-              <div class="stat-number" id="stat-total-bookings">-</div>
+              <div class="stat-icon"><i data-lucide="calendar"></i></div>
+              <div>
+                <div class="stat-label">Total Bookings</div>
+                <div class="stat-number" id="stat-total-bookings">-</div>
+              </div>
             </div>
           </div>
+          
           <div class="dashboard-cards">
             <div class="card">
               <h3>Recent Bookings</h3>
@@ -66,25 +108,36 @@
                 </table>
               </div>
             </div>
+            
             <div class="card quick-actions">
               <h3>Quick Actions</h3>
-              <button class="btn btn-primary" onclick="openModal('add-room-modal')">➕ Add Room</button>
-              <button class="btn btn-primary" onclick="openModal('register-guest-modal')">➕ Register Guest</button>
-              <button class="btn btn-primary" onclick="openNewBookingModal()">➕ New Booking</button>
+              <button class="btn btn-primary" onclick="openModal('add-room-modal')">
+                <i data-lucide="plus"></i> Add Room
+              </button>
+              <button class="btn btn-primary" onclick="openModal('register-guest-modal')">
+                <i data-lucide="user-plus"></i> Register Guest
+              </button>
+              <button class="btn btn-primary" onclick="openNewBookingModal()">
+                <i data-lucide="calendar-plus"></i> New Booking
+              </button>
             </div>
           </div>
         </section>
         
+        <!-- Rooms Section -->
         <section id="rooms-section" class="section">
           <div class="toolbar">
-            <input type="text" id="search-rooms" placeholder="Search rooms..." class="search-input">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="search-rooms" placeholder="Search rooms..." class="search-input">
+            </div>
             <select id="filter-rooms" class="filter-select">
               <option value="all">All Rooms</option>
               <option value="available">Available</option>
               <option value="booked">Booked</option>
             </select>
           </div>
-          <div class="table-container">
+          <div class="card table-container">
             <table class="table">
               <thead>
                 <tr>
@@ -102,11 +155,15 @@
           </div>
         </section>
 
+        <!-- Guests Section -->
         <section id="guests-section" class="section">
           <div class="toolbar">
-            <input type="text" id="search-guests" placeholder="Search guests by name or ID..." class="search-input">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="search-guests" placeholder="Search guests by name or ID..." class="search-input">
+            </div>
           </div>
-          <div class="table-container">
+          <div class="card table-container">
             <table class="table">
               <thead>
                 <tr>
@@ -125,11 +182,15 @@
           </div>
         </section>
 
+        <!-- Bookings Section -->
         <section id="bookings-section" class="section">
           <div class="toolbar">
-            <input type="text" id="search-bookings" placeholder="Search bookings..." class="search-input">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="search-bookings" placeholder="Search bookings..." class="search-input">
+            </div>
           </div>
-          <div class="table-container">
+          <div class="card table-container">
             <table class="table">
               <thead>
                 <tr>
@@ -157,7 +218,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Add Room</h3>
-        <button class="close-btn" data-close-modal="add-room-modal">✖</button>
+        <button class="close-btn" data-close-modal="add-room-modal"><i data-lucide="x"></i></button>
       </div>
       <form id="add-room-form">
         <div class="modal-body">
@@ -191,13 +252,13 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Edit Room</h3>
-        <button class="close-btn" data-close-modal="edit-room-modal">✖</button>
+        <button class="close-btn" data-close-modal="edit-room-modal"><i data-lucide="x"></i></button>
       </div>
       <form id="edit-room-form">
         <div class="modal-body">
           <div class="form-group">
             <label for="edit-room-no">Room No</label>
-            <input type="number" id="edit-room-no" name="roomNo" readonly>
+            <input type="number" id="edit-room-no" name="roomNo" readonly class="readonly-input">
           </div>
           <div class="form-group">
             <label for="edit-room-type">Room Type</label>
@@ -225,7 +286,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Register Guest</h3>
-        <button class="close-btn" data-close-modal="register-guest-modal">✖</button>
+        <button class="close-btn" data-close-modal="register-guest-modal"><i data-lucide="x"></i></button>
       </div>
       <form id="register-guest-form">
         <div class="modal-body">
@@ -254,7 +315,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3>New Booking</h3>
-        <button class="close-btn" data-close-modal="new-booking-modal">✖</button>
+        <button class="close-btn" data-close-modal="new-booking-modal"><i data-lucide="x"></i></button>
       </div>
       <form id="new-booking-form">
         <div class="modal-body">
@@ -291,15 +352,15 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Cancel Booking</h3>
-        <button class="close-btn" data-close-modal="cancel-booking-modal">✖</button>
+        <button class="close-btn" data-close-modal="cancel-booking-modal"><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body">
         <p>Are you sure you want to cancel booking <strong id="cancel-booking-id-display"></strong>?</p>
-        <p class="text-danger">This action cannot be undone.</p>
+        <p class="text-danger" style="margin-top: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; vertical-align: text-bottom;"></i> This action cannot be undone.</p>
         <input type="hidden" id="cancel-booking-id">
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal="cancel-booking-modal">Keep Booking</button>
+        <button type="button" class="btn btn-secondary" data-close-modal="cancel-booking-modal">Keep</button>
         <button type="button" class="btn btn-danger" id="confirm-cancel-booking">Cancel Booking</button>
       </div>
     </div>
@@ -309,18 +370,18 @@
     <div class="modal">
       <div class="modal-header">
         <h3>Booking Details</h3>
-        <button class="close-btn" data-close-modal="view-booking-modal">✖</button>
+        <button class="close-btn" data-close-modal="view-booking-modal"><i data-lucide="x"></i></button>
       </div>
       <div class="modal-body">
-        <div class="detail-row"><span class="detail-label">Booking ID:</span> <span id="view-b-id"></span></div>
-        <div class="detail-row"><span class="detail-label">Guest:</span> <span id="view-b-guest"></span></div>
-        <div class="detail-row"><span class="detail-label">Room No:</span> <span id="view-b-room"></span></div>
-        <div class="detail-row"><span class="detail-label">Check-in:</span> <span id="view-b-in"></span></div>
-        <div class="detail-row"><span class="detail-label">Check-out:</span> <span id="view-b-out"></span></div>
-        <div class="detail-row"><span class="detail-label">Bill:</span> <span id="view-b-bill"></span></div>
+        <div class="detail-row"><span class="detail-label">Booking ID</span> <span id="view-b-id" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Guest</span> <span id="view-b-guest" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Room No</span> <span id="view-b-room" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Check-in</span> <span id="view-b-in" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Check-out</span> <span id="view-b-out" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Total Bill</span> <span id="view-b-bill" class="detail-val" style="font-weight: 600; color: var(--blue);"></span></div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-close-modal="view-booking-modal">Close</button>
+        <button type="button" class="btn btn-primary" data-close-modal="view-booking-modal">Done</button>
       </div>
     </div>
   </div>
@@ -330,4 +391,3 @@
   <script src="/js/app.js" defer></script>
 </body>
 </html>
-

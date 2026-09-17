@@ -39,14 +39,15 @@ function showSection(sectionId) {
     titleEl.textContent = 'Dashboard';
   } else if (sectionId === 'rooms-section') {
     titleEl.textContent = 'Rooms';
-    actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openModal('add-room-modal')">➕ Add Room</button>`;
+    actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openModal('add-room-modal')"><i data-lucide="plus"></i> Add Room</button>`;
   } else if (sectionId === 'guests-section') {
     titleEl.textContent = 'Guests';
-    actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openModal('register-guest-modal')">➕ Register Guest</button>`;
+    actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openModal('register-guest-modal')"><i data-lucide="user-plus"></i> Register</button>`;
   } else if (sectionId === 'bookings-section') {
     titleEl.textContent = 'Bookings';
-    actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openNewBookingModal()">➕ New Booking</button>`;
+    actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openNewBookingModal()"><i data-lucide="calendar-plus"></i> New Booking</button>`;
   }
+  lucide.createIcons();
 }
 
 // ============================================
@@ -120,10 +121,8 @@ function renderDashboard() {
   recent.forEach(b => {
     const tr = document.createElement('tr');
     
-    // Status logic: active if checkout date is in future, else completed
     const outDate = new Date(b.checkOut);
     const now = new Date();
-    // Reset time for fair comparison
     now.setHours(0, 0, 0, 0);
     const isActive = outDate >= now;
     const badgeClass = isActive ? 'badge-success' : 'badge-neutral';
@@ -544,8 +543,8 @@ function showToast(message, type = 'success') {
   
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transform = 'translateX(100%)';
-    toast.style.transition = 'all 0.3s ease-out';
+    toast.style.transform = 'translateX(100%) scale(0.9)';
+    toast.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
@@ -562,10 +561,8 @@ function formatDate(dateStr) {
   const parts = dateStr.split('-');
   let d;
   if (parts.length === 3 && parts[2].length === 4) {
-      // dd-mm-yyyy format if returned from DB directly
       d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
   } else {
-      // yyyy-mm-dd
       d = new Date(dateStr);
   }
   
@@ -587,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Navigation
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      showSection(e.target.closest('.nav-btn').dataset.section);
+      showSection(e.currentTarget.dataset.section);
     });
   });
 
@@ -624,13 +621,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Modals Close handlers
   document.querySelectorAll('[data-close-modal]').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      closeModal(e.target.closest('button').dataset.closeModal);
+      closeModal(e.currentTarget.dataset.closeModal);
     });
   });
 
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', (e) => {
-      // Close only if clicking directly on overlay, but avoid for cancel confirmation
       if (e.target === overlay && overlay.id !== 'cancel-booking-modal') {
         overlay.classList.remove('active');
       }
@@ -649,5 +645,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial load
   showSection('dashboard-section');
   loadAll();
+  lucide.createIcons();
 });
-

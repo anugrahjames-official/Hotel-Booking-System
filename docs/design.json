@@ -1,0 +1,84 @@
+{
+  "designSystem": {
+    "name": "Apple Liquid Glass UI",
+    "version": "2.0",
+    "principles": [
+      "Clarity: Content is strictly legible at all sizes and resolutions.",
+      "Deference: Fluid, immersive interface with a vibrant but blurred background to highlight content.",
+      "Depth: Visual layers, glass effects, and realistic shadows impart vitality and hierarchy.",
+      "Simplicity: Easiest, most minimal CSS code relying on native browser capabilities (CSS variables, backdrop-filter)."
+    ],
+    "typography": {
+      "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      "weights": {
+        "regular": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+      },
+      "hierarchy": {
+        "h1": { "fontSize": "2rem", "fontWeight": 700, "letterSpacing": "-0.02em" },
+        "h2": { "fontSize": "1.5rem", "fontWeight": 600, "letterSpacing": "-0.01em" },
+        "h3": { "fontSize": "1.25rem", "fontWeight": 600 },
+        "body": { "fontSize": "1rem", "fontWeight": 400 },
+        "caption": { "fontSize": "0.875rem", "fontWeight": 500, "textTransform": "uppercase", "letterSpacing": "0.05em" }
+      }
+    },
+    "colorScheme": {
+      "mode": "light",
+      "background": {
+        "base": "#f4f4f9",
+        "blobs": [
+          "rgba(0, 122, 255, 0.4)",
+          "rgba(255, 45, 85, 0.3)",
+          "rgba(88, 86, 214, 0.3)"
+        ]
+      },
+      "glass": {
+        "surface": "rgba(255, 255, 255, 0.65)",
+        "surfaceHover": "rgba(255, 255, 255, 0.8)",
+        "surfaceActive": "rgba(255, 255, 255, 0.9)",
+        "border": "rgba(255, 255, 255, 0.6)",
+        "shadow": "0 8px 32px 0 rgba(31, 38, 135, 0.07)"
+      },
+      "text": {
+        "primary": "#1c1c1e",
+        "secondary": "#3a3a3c",
+        "muted": "#8e8e93"
+      },
+      "appleAccents": {
+        "blue": "#007aff",
+        "green": "#34c759",
+        "orange": "#ff9500",
+        "red": "#ff3b30",
+        "gray": "#8e8e93"
+      }
+    },
+    "effects": {
+      "liquidGlass": {
+        "backdropFilter": "blur(20px)",
+        "webkitBackdropFilter": "blur(20px)",
+        "borderRadius": "20px",
+        "transition": "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)"
+      }
+    },
+    "responsiveness": {
+      "mobile": {
+        "breakpoint": "max-width: 480px",
+        "layout": "1 column, full width cards, scrollable tables"
+      },
+      "tablet": {
+        "breakpoint": "max-width: 768px",
+        "layout": "1 column main, collapsible sidebar"
+      },
+      "laptop": {
+        "breakpoint": "max-width: 1440px",
+        "layout": "Sidebar (260px) + Main Content (1fr), 2-3 column grids"
+      },
+      "tv": {
+        "breakpoint": "min-width: 1441px",
+        "layout": "Max-width container (1600px) centered, up-scaled typography for readability at distance"
+      }
+    }
+  }
+}
