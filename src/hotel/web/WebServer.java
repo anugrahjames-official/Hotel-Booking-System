@@ -66,14 +66,17 @@ public class WebServer {
             Path webRoot = Paths.get("web").toAbsolutePath().normalize();
             Path requestedFile = webRoot.resolve(path.substring(1)).normalize();
 
-            if (!requestedFile.startsWith(webRoot)) {
-                sendError(exchange, 403, "Forbidden: Path Traversal Detected");
-                return;
-            }
-
             File file = requestedFile.toFile();
             if (!file.exists() || file.isDirectory()) {
                 sendError(exchange, 404, "File Not Found");
+                return;
+            }
+
+            Path canonicalWebRoot = webRoot.toRealPath();
+            Path canonicalRequestedFile = requestedFile.toRealPath();
+
+            if (!canonicalRequestedFile.startsWith(canonicalWebRoot)) {
+                sendError(exchange, 403, "Forbidden: Path Traversal Detected");
                 return;
             }
 
@@ -94,7 +97,7 @@ public class WebServer {
         }
     }
 
-    private static String getAllRoomsJson() {
+    private static String getAllRoomsJson() throws SQLException {
         StringBuilder json = new StringBuilder("[");
         String sql = "SELECT room_no, room_type, base_price, available FROM rooms ORDER BY room_no";
         try (Connection conn = DatabaseManager.connect();
@@ -113,14 +116,12 @@ public class WebServer {
                     .append("}");
                 first = false;
             }
-        } catch (SQLException e) {
-            System.out.println("[WEB][ERROR] SQL Exception in getAllRoomsJson: " + e.getMessage());
         }
         json.append("]");
         return json.toString();
     }
 
-    private static String getAllBookingsJson() {
+    private static String getAllBookingsJson() throws SQLException {
         StringBuilder json = new StringBuilder("[");
         String sql = "SELECT booking_id, guest_id, room_no, check_in, check_out, bill FROM bookings ORDER BY booking_id DESC";
         try (Connection conn = DatabaseManager.connect();
@@ -141,8 +142,6 @@ public class WebServer {
                     .append("}");
                 first = false;
             }
-        } catch (SQLException e) {
-            System.out.println("[WEB][ERROR] SQL Exception in getAllBookingsJson: " + e.getMessage());
         }
         json.append("]");
         return json.toString();

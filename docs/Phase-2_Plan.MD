@@ -706,9 +706,9 @@ This is a safe UI-only enhancement.
 
 ---
 
-# 18. Don't add authentication
+# 18. Don't add authentication (for local dev)
 
-Not necessary.
+Not necessary for a local demonstration.
 
 You don't need:
 
@@ -720,7 +720,7 @@ Roles
 Admin authentication
 ```
 
-Those would create a lot of new concepts unrelated to the project.
+Those would create a lot of new concepts unrelated to the project. However, the server must be bound explicitly to `InetAddress.getLoopbackAddress()` instead of all interfaces to ensure the unauthenticated endpoints are not exposed to the local network. Server-side authentication is strictly required before any non-local deployment.
 
 ---
 
