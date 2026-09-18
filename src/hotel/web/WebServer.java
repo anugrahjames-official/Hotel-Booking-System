@@ -29,7 +29,7 @@ public class WebServer {
         DatabaseManager.initializeDatabase();
 
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+            HttpServer server = HttpServer.create(new InetSocketAddress(java.net.InetAddress.getLoopbackAddress(), 8080), 0);
 
             server.createContext("/", WebServer::staticFileHandler);
             server.createContext("/api/rooms", WebServer::handleRooms);
@@ -158,7 +158,7 @@ public class WebServer {
         }
         String[] pairs = body.split("&");
         for (String pair : pairs) {
-            String[] kv = pair.split("=");
+            String[] kv = pair.split("=", 2);
             try {
                 String key = URLDecoder.decode(kv[0], "UTF-8");
                 String value = kv.length > 1 ? URLDecoder.decode(kv[1], "UTF-8") : "";
