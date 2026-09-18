@@ -377,7 +377,6 @@ nav {
 
 .search-input, .filter-select {
   width: 100%;
-  padding: 14px 16px 14px 44px;
   border: 1px solid var(--glass-border);
   background: rgba(255,255,255,0.5);
   backdrop-filter: blur(10px);
@@ -395,8 +394,6 @@ nav {
 }
 
 .filter-select {
-  padding-left: 16px;
-  padding-right: 40px;
   padding: 14px 40px 14px 24px; /* More padding on the left, space on right for arrow */
   width: auto;
   min-width: 140px;
