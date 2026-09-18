@@ -47,7 +47,9 @@ function showSection(sectionId) {
     titleEl.textContent = 'Bookings';
     actionsEl.innerHTML = `<button class="btn btn-primary" onclick="openNewBookingModal()"><i data-lucide="calendar-plus"></i> New Booking</button>`;
   }
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 }
 
 // ============================================
@@ -558,14 +560,25 @@ function formatCurrency(amount) {
 
 function formatDate(dateStr) {
   if (!dateStr) return '';
-  const parts = dateStr.split('-');
-  let d;
-  if (parts.length === 3 && parts[2].length === 4) {
-      d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-  } else {
-      d = new Date(dateStr);
+  let parts = dateStr.split('-');
+  if (parts.length === 3) {
+      let year, month, day;
+      if (parts[2].length === 4) { // DD-MM-YYYY
+          year = parseInt(parts[2], 10);
+          month = parseInt(parts[1], 10) - 1;
+          day = parseInt(parts[0], 10);
+      } else { // YYYY-MM-DD
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10) - 1;
+          day = parseInt(parts[2], 10);
+      }
+      const d = new Date(year, month, day);
+      if (!isNaN(d)) {
+          return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
   }
   
+  const d = new Date(dateStr);
   if (isNaN(d)) return dateStr;
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
@@ -645,5 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial load
   showSection('dashboard-section');
   loadAll();
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 });

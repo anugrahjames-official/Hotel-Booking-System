@@ -223,6 +223,11 @@ public class WebServer {
                 int roomNo = Integer.parseInt(data.get("roomNo"));
                 String roomType = data.get("roomType");
                 double basePrice = Double.parseDouble(data.get("basePrice"));
+                
+                if (!Double.isFinite(basePrice)) {
+                    sendError(exchange, 400, "Invalid base price");
+                    return;
+                }
 
                 Room existing = getRoomForVerification(roomNo);
                 if (existing != null) {
@@ -266,6 +271,11 @@ public class WebServer {
             int roomNo = Integer.parseInt(data.get("roomNo"));
             String roomType = data.get("roomType");
             double basePrice = Double.parseDouble(data.get("basePrice"));
+
+            if (!Double.isFinite(basePrice)) {
+                sendError(exchange, 400, "Invalid base price");
+                return;
+            }
 
             ReservationManager.updateRoom(roomNo, roomType, basePrice);
 
