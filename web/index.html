@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Booking System</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Lucide Icons for Apple-like minimal icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Abstract Blurred Background Blobs -->
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="building-2"></i>
+        </div>
+        <div>
+          <h1>Hotel</h1>
+          <p>Booking System</p>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-section="dashboard-section">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-btn" data-section="rooms-section">
+          <i data-lucide="bed-double"></i>
+          <span>Rooms</span>
+        </button>
+        <button class="nav-btn" data-section="guests-section">
+          <i data-lucide="users"></i>
+          <span>Guests</span>
+        </button>
+        <button class="nav-btn" data-section="bookings-section">
+          <i data-lucide="calendar-check"></i>
+          <span>Bookings</span>
+        </button>
+      </nav>
+    </aside>
+    
+    <main class="main">
+      <header class="header">
+        <h2 id="page-title">Dashboard</h2>
+        <div id="header-actions"></div>
+      </header>
+      
+      <div class="content">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon"><i data-lucide="bed"></i></div>
+              <div>
+                <div class="stat-label">Total Rooms</div>
+                <div class="stat-number" id="stat-total-rooms">-</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+              <div>
+                <div class="stat-label">Available</div>
+                <div class="stat-number" id="stat-available-rooms">-</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i data-lucide="users"></i></div>
+              <div>
+                <div class="stat-label">Total Guests</div>
+                <div class="stat-number" id="stat-total-guests">-</div>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon"><i data-lucide="calendar"></i></div>
+              <div>
+                <div class="stat-label">Total Bookings</div>
+                <div class="stat-number" id="stat-total-bookings">-</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="dashboard-cards">
+            <div class="card">
+              <h3>Recent Bookings</h3>
+              <div class="table-container">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Guest ID</th>
+                      <th>Room</th>
+                      <th>Check-In</th>
+                      <th>Check-Out</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-bookings-body">
+                    <tr><td colspan="6" class="loading">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div class="card quick-actions">
+              <h3>Quick Actions</h3>
+              <button class="btn btn-primary" onclick="openModal('add-room-modal')">
+                <i data-lucide="plus"></i> Add Room
+              </button>
+              <button class="btn btn-primary" onclick="openModal('register-guest-modal')">
+                <i data-lucide="user-plus"></i> Register Guest
+              </button>
+              <button class="btn btn-primary" onclick="openNewBookingModal()">
+                <i data-lucide="calendar-plus"></i> New Booking
+              </button>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Rooms Section -->
+        <section id="rooms-section" class="section">
+          <div class="toolbar">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="search-rooms" placeholder="Search rooms..." class="search-input">
+            </div>
+            <select id="filter-rooms" class="filter-select">
+              <option value="all">All Rooms</option>
+              <option value="available">Available</option>
+              <option value="booked">Booked</option>
+            </select>
+          </div>
+          <div class="card table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Room No</th>
+                  <th>Type</th>
+                  <th>Base Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rooms-table-body">
+                <tr><td colspan="5" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Guests Section -->
+        <section id="guests-section" class="section">
+          <div class="toolbar">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="search-guests" placeholder="Search guests by name or ID..." class="search-input">
+            </div>
+          </div>
+          <div class="card table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>ID Proof</th>
+                  <th>Contact</th>
+                  <th>Loyalty Tier</th>
+                  <th>Bookings</th>
+                </tr>
+              </thead>
+              <tbody id="guests-table-body">
+                <tr><td colspan="6" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Bookings Section -->
+        <section id="bookings-section" class="section">
+          <div class="toolbar">
+            <div class="search-wrapper">
+              <i data-lucide="search"></i>
+              <input type="text" id="search-bookings" placeholder="Search bookings..." class="search-input">
+            </div>
+          </div>
+          <div class="card table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Guest ID</th>
+                  <th>Room No</th>
+                  <th>Check-In</th>
+                  <th>Check-Out</th>
+                  <th>Bill</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookings-table-body">
+                <tr><td colspan="7" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODALS -->
+  <div id="add-room-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Room</h3>
+        <button class="close-btn" data-close-modal="add-room-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="add-room-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="add-room-no">Room No</label>
+            <input type="number" id="add-room-no" name="roomNo" required>
+          </div>
+          <div class="form-group">
+            <label for="add-room-type">Room Type</label>
+            <select id="add-room-type" name="roomType" required>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Deluxe">Deluxe</option>
+              <option value="Suite">Suite</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="add-room-price">Base Price (₹)</label>
+            <input type="number" id="add-room-price" name="basePrice" step="0.01" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="add-room-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="add-room-submit">Add Room</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="edit-room-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Edit Room</h3>
+        <button class="close-btn" data-close-modal="edit-room-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="edit-room-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="edit-room-no">Room No</label>
+            <input type="number" id="edit-room-no" name="roomNo" readonly class="readonly-input">
+          </div>
+          <div class="form-group">
+            <label for="edit-room-type">Room Type</label>
+            <select id="edit-room-type" name="roomType" required>
+              <option value="Single">Single</option>
+              <option value="Double">Double</option>
+              <option value="Deluxe">Deluxe</option>
+              <option value="Suite">Suite</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-room-price">Base Price (₹)</label>
+            <input type="number" id="edit-room-price" name="basePrice" step="0.01" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="edit-room-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="edit-room-submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="register-guest-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Register Guest</h3>
+        <button class="close-btn" data-close-modal="register-guest-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="register-guest-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="guest-name">Name</label>
+            <input type="text" id="guest-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="guest-id-proof">ID Proof</label>
+            <input type="text" id="guest-id-proof" name="idProof" required>
+          </div>
+          <div class="form-group">
+            <label for="guest-contact">Contact Number</label>
+            <input type="tel" id="guest-contact" name="contact" pattern="\d{10}" title="Enter 10-digit phone number" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="register-guest-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="register-guest-submit">Register</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="new-booking-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>New Booking</h3>
+        <button class="close-btn" data-close-modal="new-booking-modal"><i data-lucide="x"></i></button>
+      </div>
+      <form id="new-booking-form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="booking-guest">Guest</label>
+            <select id="booking-guest" name="guestId" required>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="booking-room">Room</label>
+            <select id="booking-room" name="roomNo" required>
+              <!-- Populated dynamically with available rooms -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="booking-checkin">Check-in Date</label>
+            <input type="date" id="booking-checkin" name="checkIn" required>
+          </div>
+          <div class="form-group">
+            <label for="booking-checkout">Check-out Date</label>
+            <input type="date" id="booking-checkout" name="checkOut" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-close-modal="new-booking-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="new-booking-submit">Create Booking</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="cancel-booking-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Cancel Booking</h3>
+        <button class="close-btn" data-close-modal="cancel-booking-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to cancel booking <strong id="cancel-booking-id-display"></strong>?</p>
+        <p class="text-danger" style="margin-top: 8px;"><i data-lucide="alert-triangle" style="width: 16px; height: 16px; vertical-align: text-bottom;"></i> This action cannot be undone.</p>
+        <input type="hidden" id="cancel-booking-id">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="cancel-booking-modal">Keep</button>
+        <button type="button" class="btn btn-danger" id="confirm-cancel-booking">Cancel Booking</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-booking-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Booking Details</h3>
+        <button class="close-btn" data-close-modal="view-booking-modal"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row"><span class="detail-label">Booking ID</span> <span id="view-b-id" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Guest</span> <span id="view-b-guest" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Room No</span> <span id="view-b-room" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Check-in</span> <span id="view-b-in" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Check-out</span> <span id="view-b-out" class="detail-val"></span></div>
+        <div class="detail-row"><span class="detail-label">Total Bill</span> <span id="view-b-bill" class="detail-val" style="font-weight: 600; color: var(--blue);"></span></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-close-modal="view-booking-modal">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="/js/app.js" defer></script>
+</body>
+</html>
