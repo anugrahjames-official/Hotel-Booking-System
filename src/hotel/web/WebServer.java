@@ -29,23 +29,63 @@ public class WebServer {
         DatabaseManager.initializeDatabase();
 
         try {
-            HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+            String bindAddressStr = System.getenv("BIND_ADDRESS");
+            java.net.InetAddress bindAddr;
+            if (bindAddressStr != null && !bindAddressStr.trim().isEmpty()) {
+                bindAddr = java.net.InetAddress.getByName(bindAddressStr);
+            } else {
+                bindAddr = java.net.InetAddress.getLoopbackAddress();
+            }
+
+            HttpServer server = HttpServer.create(new InetSocketAddress(bindAddr, 8080), 0);
 
             server.createContext("/", WebServer::staticFileHandler);
-            server.createContext("/api/rooms", WebServer::handleRooms);
-            server.createContext("/api/rooms/update", WebServer::handleRoomUpdate);
-            server.createContext("/api/rooms/delete", WebServer::handleRoomDelete);
-            server.createContext("/api/guests", WebServer::handleGuests);
-            server.createContext("/api/bookings", WebServer::handleBookings);
-            server.createContext("/api/bookings/cancel", WebServer::handleBookingCancel);
+
+            com.sun.net.httpserver.Filter authFilter = new com.sun.net.httpserver.Filter() {
+                @Override
+                public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
+                    String method = exchange.getRequestMethod();
+                    if ("POST".equals(method) || "PUT".equals(method) || "DELETE".equals(method) || "PATCH".equals(method)) {
+                        if (!isAuthorized(exchange)) return;
+                    }
+                    chain.doFilter(exchange);
+                }
+                @Override
+                public String description() { return "AuthFilter"; }
+            };
+
+            server.createContext("/api/rooms", WebServer::handleRooms).getFilters().add(authFilter);
+            server.createContext("/api/rooms/update", WebServer::handleRoomUpdate).getFilters().add(authFilter);
+            server.createContext("/api/rooms/delete", WebServer::handleRoomDelete).getFilters().add(authFilter);
+            server.createContext("/api/guests", WebServer::handleGuests).getFilters().add(authFilter);
+            server.createContext("/api/bookings", WebServer::handleBookings).getFilters().add(authFilter);
+            server.createContext("/api/bookings/cancel", WebServer::handleBookingCancel).getFilters().add(authFilter);
 
             server.setExecutor(Executors.newFixedThreadPool(10));
             server.start();
 
-            System.out.println("Server started at http://localhost:8080");
+            System.out.println("Server started at http://" + bindAddr.getHostAddress() + ":8080");
         } catch (IOException e) {
             System.err.println("Failed to start server: " + e.getMessage());
         }
+    }
+
+    private static boolean isAuthorized(HttpExchange exchange) {
+        String authToken = System.getenv("AUTH_TOKEN");
+        if (authToken == null || authToken.trim().isEmpty()) {
+            return true;
+        }
+        String authHeader = exchange.getRequestHeaders().getFirst("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (java.security.MessageDigest.isEqual(
+                    token.getBytes(java.nio.charset.StandardCharsets.UTF_8), 
+                    authToken.getBytes(java.nio.charset.StandardCharsets.UTF_8))) {
+                return true;
+            }
+        }
+        sendError(exchange, 401, "Unauthorized");
+        return false;
     }
 
     private static void staticFileHandler(HttpExchange exchange) {
@@ -151,14 +191,19 @@ public class WebServer {
         return DatabaseManager.getRoom(roomNo);
     }
 
-    private static Map<String, String> parseFormData(String body) {
+    private static Map<String, String> parseFormData(HttpExchange exchange, String body) throws IllegalArgumentException {
+        String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+        if (contentType != null && !contentType.toLowerCase().contains("application/x-www-form-urlencoded")) {
+            throw new IllegalArgumentException("Unsupported Media Type");
+        }
+        
         Map<String, String> map = new HashMap<>();
         if (body == null || body.isEmpty()) {
             return map;
         }
         String[] pairs = body.split("&");
         for (String pair : pairs) {
-            String[] kv = pair.split("=");
+            String[] kv = pair.split("=", 2);
             try {
                 String key = URLDecoder.decode(kv[0], "UTF-8");
                 String value = kv.length > 1 ? URLDecoder.decode(kv[1], "UTF-8") : "";
@@ -214,7 +259,13 @@ public class WebServer {
             if (method.equals("GET")) {
                 sendData(exchange, getAllRoomsJson());
             } else if (method.equals("POST")) {
-                Map<String, String> data = parseFormData(readBody(exchange));
+                Map<String, String> data;
+                try {
+                    data = parseFormData(exchange, readBody(exchange));
+                } catch (IllegalArgumentException e) {
+                    sendError(exchange, 400, "Bad Request: " + e.getMessage());
+                    return;
+                }
                 if (!data.containsKey("roomNo") || !data.containsKey("roomType") || !data.containsKey("basePrice")) {
                     sendError(exchange, 400, "Missing required fields");
                     return;
@@ -262,7 +313,13 @@ public class WebServer {
                 return;
             }
 
-            Map<String, String> data = parseFormData(readBody(exchange));
+            Map<String, String> data;
+            try {
+                data = parseFormData(exchange, readBody(exchange));
+            } catch (IllegalArgumentException e) {
+                sendError(exchange, 400, "Bad Request: " + e.getMessage());
+                return;
+            }
             if (!data.containsKey("roomNo") || !data.containsKey("roomType") || !data.containsKey("basePrice")) {
                 sendError(exchange, 400, "Missing required fields");
                 return;
@@ -301,7 +358,13 @@ public class WebServer {
                 return;
             }
 
-            Map<String, String> data = parseFormData(readBody(exchange));
+            Map<String, String> data;
+            try {
+                data = parseFormData(exchange, readBody(exchange));
+            } catch (IllegalArgumentException e) {
+                sendError(exchange, 400, "Bad Request: " + e.getMessage());
+                return;
+            }
             if (!data.containsKey("roomNo")) {
                 sendError(exchange, 400, "Missing roomNo");
                 return;
@@ -343,7 +406,13 @@ public class WebServer {
                 json.append("]");
                 sendData(exchange, json.toString());
             } else if (method.equals("POST")) {
-                Map<String, String> data = parseFormData(readBody(exchange));
+                Map<String, String> data;
+                try {
+                    data = parseFormData(exchange, readBody(exchange));
+                } catch (IllegalArgumentException e) {
+                    sendError(exchange, 400, "Bad Request: " + e.getMessage());
+                    return;
+                }
                 if (!data.containsKey("name") || !data.containsKey("idProof") || !data.containsKey("contact")) {
                     sendError(exchange, 400, "Missing required fields");
                     return;
@@ -376,7 +445,13 @@ public class WebServer {
             if (method.equals("GET")) {
                 sendData(exchange, getAllBookingsJson());
             } else if (method.equals("POST")) {
-                Map<String, String> data = parseFormData(readBody(exchange));
+                Map<String, String> data;
+                try {
+                    data = parseFormData(exchange, readBody(exchange));
+                } catch (IllegalArgumentException e) {
+                    sendError(exchange, 400, "Bad Request: " + e.getMessage());
+                    return;
+                }
                 if (!data.containsKey("guestId") || !data.containsKey("roomNo") || !data.containsKey("checkIn") || !data.containsKey("checkOut")) {
                     sendError(exchange, 400, "Missing required fields");
                     return;
@@ -418,7 +493,13 @@ public class WebServer {
                 return;
             }
 
-            Map<String, String> data = parseFormData(readBody(exchange));
+            Map<String, String> data;
+            try {
+                data = parseFormData(exchange, readBody(exchange));
+            } catch (IllegalArgumentException e) {
+                sendError(exchange, 400, "Bad Request: " + e.getMessage());
+                return;
+            }
             if (!data.containsKey("bookingId")) {
                 sendError(exchange, 400, "Missing bookingId");
                 return;
